@@ -400,7 +400,7 @@ String truncateText(String text, int limit) {
             );
           } else if (index == 2) {
             return buildCustomExpansionTile(
-              isCompletedList[index]
+              isCompletedList[index] && !isExpandedList[index]
                   ? '${eventList.length} Events Added'
                   : 'Event Details',
               eventFormat(),
