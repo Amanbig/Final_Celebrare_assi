@@ -799,7 +799,7 @@ class _FillFormState extends State<FillForm> {
                             children: [
                               Container(
                                 height: 82.h,
-                                width: 88.h,
+                                width: 82.h,
                                 margin: EdgeInsets.only(right: 2.h),
                                 decoration:
                                     AppDecoration.outlineBluegray10004.copyWith(
@@ -820,7 +820,7 @@ class _FillFormState extends State<FillForm> {
                                             child: Image.file(
                                               File(brideImage),
                                               height: 82.h,
-                                              width: 88.h,
+                                              width: 82.h,
                                               fit: BoxFit.cover,
                                             ),
                                           )
@@ -850,7 +850,7 @@ class _FillFormState extends State<FillForm> {
                             children: [
                               Container(
                                 height: 82.h,
-                                width: 88.h,
+                                width: 82.h,
                                 margin: EdgeInsets.only(right: 8.h),
                                 decoration:
                                     AppDecoration.outlineBluegray10004.copyWith(
@@ -871,7 +871,7 @@ class _FillFormState extends State<FillForm> {
                                             child: Image.file(
                                               File(groomImage),
                                               height: 82.h,
-                                              width: 88.h,
+                                              width: 82.h,
                                               fit: BoxFit.cover,
                                             ),
                                           )
