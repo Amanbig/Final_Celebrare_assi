@@ -635,7 +635,7 @@ String truncateText(String text, int limit) {
               tilePadding: EdgeInsets.zero,
               initiallyExpanded: isExpandedList[index],
               maintainState: true,
-              enabled: isCurrentStep || isPreviousStep,
+              enabled: isCurrentStep || isPreviousStep || isCompletedList[index],
               title: Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0),
                 child: Row(
@@ -717,7 +717,7 @@ String truncateText(String text, int limit) {
                       ),
               ),
               onExpansionChanged: (expanded) {
-                if (!isCurrentStep && !isPreviousStep) return;
+                // if (!isCurrentStep && !isPreviousStep) return;
 
                 setState(() {
                   // First, handle the clicked tile's state
@@ -998,7 +998,7 @@ String truncateText(String text, int limit) {
                                                   109, 81, 206, 1),
                                               width: 2))),
                                   child: Padding(
-                                    padding: const EdgeInsets.only(left: 10.0),
+                                    padding: const EdgeInsets.only(left: 19.0),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -1054,14 +1054,14 @@ String truncateText(String text, int limit) {
                                                 child: Icon(
                                                     PhosphorIcons.trash(),
                                                     size:20.h,
-                                                    color:Colors.red[800]
+                                                    color:const Color.fromARGB(255, 200, 4, 4)
                                                   )
                                               ),
-                                              Spacer(),
+                                              SizedBox(width: 34.h,),
                                               CustomIconButton(
                                                 height: 40.h,
                                                 width: 40.h,
-                                                onTap: () {
+                                                onTap:() {
                                                   setState(() {
                                                     isEdit = true;
                                                     isSelect = false;
