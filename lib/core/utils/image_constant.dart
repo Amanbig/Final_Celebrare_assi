@@ -11,6 +11,6 @@ class ImageConstant {
       '$imagePath/img_group_1321314841_40x40.png';
 
   static String groomImage = '$imagePath/img_group_1321314841_1.png';
-
+  static String wowInviteImage = '$imagePath/img_wow_invites_512.png';
 }
 

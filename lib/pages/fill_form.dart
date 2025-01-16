@@ -353,7 +353,7 @@ String truncateText(String text, int limit) {
                 color: Colors.black), // Remove default AppBar shadow
             title: Center(
               child: Image.asset(
-                    'assets/images/img_wow_invites_512.png',
+                    ImageConstant.wowInviteImage,
                     width: 144,
                     height: 39,
                   ),
