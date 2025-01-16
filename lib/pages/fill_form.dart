@@ -500,15 +500,15 @@ class _FillFormState extends State<FillForm> {
                             : isPlaying
                                 ? Icons.pause_circle_outline
                                 : Icons.play_circle_outlined,
-                        color: Colors.purple,
+                        color: Color.fromRGBO(109, 81, 206, 1),
                         size: 32,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      item?.name ?? 'Pick an audio file',
+                      item?.name ?? 'Upload Music',
                       style: TextStyle(
-                        color: index == 0 ? Colors.purple : Colors.black,
+                        color: index == 0 ? Color.fromRGBO(109, 81, 206, 1) : Colors.black,
                         fontSize: 18,
                         decoration: index == 0
                             ? TextDecoration.underline
