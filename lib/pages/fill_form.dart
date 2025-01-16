@@ -1988,23 +1988,26 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
           });
         }
         else if(currentPage>3){
-          formData.add({
-            'Groom_Name':groomControllers[0].text.toString(),
-            'Bride_Name':brideControllers[0].text.toString(),
-            'Side':side,
-            'Groom_mother_name':groomControllers[1].text.isEmpty ? 'Mother name' :groomControllers[1].text,
-            'Groom_father_name':groomControllers[2].text.isEmpty ? 'Father_name' :groomControllers[2].text,
-            'Groom_grandmother_name':groomControllers[1].text.isEmpty ? 'Grandmother name':groomControllers[1].text,
-            'Groom_grandfather_name':groomControllers[2].text.isEmpty ? 'Grandfather_name':groomControllers[2].text,
-            'Bride_mother_name':brideControllers[1].text.isEmpty ? 'Mother name':brideControllers[1].text,
-            'Bride_father_name':brideControllers[2].text.isEmpty ? 'Father_name':brideControllers[2].text,
-            'Bride_grandmother_name':brideControllers[1].text.isEmpty ? 'Grandmother name':brideControllers[1].text,
-            'Bride_grandfather_name':brideControllers[2].text.isEmpty ? 'Grandfather_name':brideControllers[2].text,
-            'Bride_image':brideImageString,
-            'Groom_image':groomImageString,
-            'Events':eventList.toString(),
-            'Selected_audio':selectedMusic.audioString,
+          setState(() {
+            formData.add({
+            'groomName':groomControllers[0].text.toString(),
+            'brideName':brideControllers[0].text.toString(),
+            'side':side,
+            'groomMother':groomControllers[1].text.isEmpty ? 'Mother name' :groomControllers[1].text,
+            'groomFather':groomControllers[2].text.isEmpty ? 'Father_name' :groomControllers[2].text,
+            'groomGrandmother':groomControllers[1].text.isEmpty ? 'Grandmother name':groomControllers[1].text,
+            'groomGrandfather':groomControllers[2].text.isEmpty ? 'Grandfather_name':groomControllers[2].text,
+            'brideMother':brideControllers[1].text.isEmpty ? 'Mother name':brideControllers[1].text,
+            'brideFather':brideControllers[2].text.isEmpty ? 'Father_name':brideControllers[2].text,
+            'brideGrandmother':brideControllers[1].text.isEmpty ? 'Grandmother name':brideControllers[1].text,
+            'brideGrandfather':brideControllers[2].text.isEmpty ? 'Grandfather_name':brideControllers[2].text,
+            'brideImage':brideImageString,
+            'groomImage':groomImageString,
+            'events':eventList.toString(),
+            'selectedAudio':selectedMusic.audioString,
           });
+          });
+          print(formData.toString());
         }
          else {
           ScaffoldMessenger.of(context).showSnackBar(
