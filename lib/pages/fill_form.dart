@@ -160,7 +160,7 @@ class _FillFormState extends State<FillForm> {
           audioString: base64String,
           url: newPath);
       setState(() {
-        musicList.add(newMusic);
+        musicList.insert(0,newMusic);
         selectedMusic = newMusic;
         isDropdownVisible = false;
       });
@@ -235,6 +235,10 @@ class _FillFormState extends State<FillForm> {
     }
   }
 //// End of Get Date Function
+
+String truncateText(String text, int limit) {
+  return text.length > limit ? '${text.substring(0, limit)}...' : text;
+}
 
 //// Format Date Time Function
   String formatDateTime(DateTime date, {TimeOfDay? time}) {
@@ -467,7 +471,7 @@ class _FillFormState extends State<FillForm> {
         borderRadius: BorderRadius.circular(5),
       ),
       child: SizedBox(
-        height: 300,
+        height: 270,
         child: Scrollbar(
           thumbVisibility: true,
           child: ListView.builder(
@@ -501,21 +505,24 @@ class _FillFormState extends State<FillForm> {
                                 ? Icons.pause_circle_outline
                                 : Icons.play_circle_outlined,
                         color: Color.fromRGBO(109, 81, 206, 1),
-                        size: 32,
+                        size: 25,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      item?.name ?? 'Upload Music',
+                      truncateText(item?.name ?? 'Upload your own music', 24),
                       style: TextStyle(
-                        color: index == 0 ? Color.fromRGBO(109, 81, 206, 1) : Colors.black,
-                        fontSize: 18,
+                        color: index == 0
+                            ? Color.fromRGBO(109, 81, 206, 1)
+                            : Colors.grey[800],
+                        fontSize: 16,
                         decoration: index == 0
                             ? TextDecoration.underline
                             : TextDecoration.none,
                       ),
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.ellipsis, // Handles overflow
                     ),
+
                   ],
                 ),
               );
