@@ -1165,16 +1165,6 @@ String truncateText(String text, int limit) {
 
   /// Function to show bottom sheet with floating close button
   void showEventBottomSheet(BuildContext context, Map<String, String> event) {
-    // setState(() {
-    //   // Reset all selected states
-    //   selectedImages = List.generate(4, (index) {
-    //     // If we're editing, keep the current image selected
-    //     if (event['image'] != null) {
-    //       return imageUrl[0]['Image${index + 1}'] == event['image'];
-    //     }
-    //     return false;
-    //   });
-    // });
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
