@@ -99,11 +99,14 @@ class _FillFormState extends State<FillForm> {
       GlobalKey<FormState>(); // Key to validate bride and groom name form
 
   List<Map<String,String?>> formData = [];
+
+  final ScrollController _scrollController = ScrollController();
 //// Dispose Method
   @override
   void dispose() {
     _audioPlayer.stop();
     _audioPlayer.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 //// End of Dispose Method
@@ -472,10 +475,11 @@ String truncateText(String text, int limit) {
       ),
       child: SizedBox(
         height: 270,
-        child: Scrollbar(
-          thumbVisibility: true,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
           child: ListView.builder(
             itemCount: musicList.length + 1,
+            controller: _scrollController,
             itemBuilder: (context, index) {
               final item = index == 0 ? null : musicList[index - 1];
               return TextButton(
@@ -489,6 +493,16 @@ String truncateText(String text, int limit) {
                     });
                   }
                 },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(
+                      item == selectedMusic && index !=0 ? Colors.grey[200] : Colors.white),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius
+                          .zero, // Set border radius to zero for sharp corners
+                    ),
+                  ),
+                ),
                 child: Row(
                   mainAxisAlignment: index == 0
                       ? MainAxisAlignment.center
@@ -522,7 +536,7 @@ String truncateText(String text, int limit) {
                       ),
                       overflow: TextOverflow.ellipsis, // Handles overflow
                     ),
-
+              
                   ],
                 ),
               );
@@ -1301,12 +1315,12 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
                 setSheetState(() {
                   isSelect = false;
                   selectImage = imageUrl[0][imageKey] ?? '';
-                  selectedImages[selectedIndex] = true;
+                  // selectedImages[selectedIndex] = true;
                 });
                 setState(() {
                   isSelect = false;
                   selectImage = imageUrl[0][imageKey] ?? '';
-                  selectedImages[selectedIndex] = true;
+                  // selectedImages[selectedIndex] = true;
                 });
               }
             },
@@ -1468,6 +1482,12 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
           }
         } else {
           eventList.add(event);
+          for(int i=0;i<4;i++){
+            if(imageUrl[0]['Image${i+1}'] == event['image']){
+              selectedImages[i] = true;
+              break;
+            }
+          }
         }
 
         // Clear the controllers after adding/updating
@@ -1950,8 +1970,10 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
                   // Move to next step
                   currentPage++;
                   // Expand next step
+                  if(currentPage<3){
                   isExpandedList[currentPage] = true;
                   expansionControllers[currentPage].expand();
+                  }
                 });
               }
             },
@@ -1990,11 +2012,13 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
             // Move to next step
             currentPage++;
             // Expand next step
-            isExpandedList[currentPage] = true;
-            expansionControllers[currentPage].expand();
+            if(currentPage<3){
+              isExpandedList[currentPage] = true;
+              expansionControllers[currentPage].expand();
+            }
           });
         }
-        else if(currentPage>3){
+        else if(currentPage==4){
           setState(() {
             formData.add({
             'groomName':groomControllers[0].text.toString(),
