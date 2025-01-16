@@ -1985,11 +1985,7 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
       text: "Next",
       onPressed: () {
         if ((currentPage == 0 && _brideAndGroomKey.currentState!.validate()) ||
-            (currentPage == 1 &&
-                brideControllers[1].text.isNotEmpty &&
-                brideControllers[2].text.isNotEmpty &&
-                groomControllers[1].text.isNotEmpty &&
-                groomControllers[2].text.isNotEmpty) ||
+            (currentPage == 1) ||
             (currentPage == 2 && eventList.isNotEmpty) ||
             (currentPage == 3)) {
           setState(() {
@@ -2035,8 +2031,6 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
             SnackBar(
                 content: Text(currentPage == 0
                     ? 'Both Bride And Groom name required'
-                    : currentPage == 1
-                        ? "Groom and Bride Father's and Mother's Name are required"
                         : (currentPage == 2
                             ? 'Event List Cannot be empty'
                             : ''))),
