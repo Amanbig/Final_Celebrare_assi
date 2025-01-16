@@ -1970,7 +1970,7 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
                   // Move to next step
                   currentPage++;
                   // Expand next step
-                  if(currentPage<3){
+                  if(currentPage<=3){
                   isExpandedList[currentPage] = true;
                   expansionControllers[currentPage].expand();
                   }
@@ -2012,7 +2012,7 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
             // Move to next step
             currentPage++;
             // Expand next step
-            if(currentPage<3){
+            if(currentPage<=3){
               isExpandedList[currentPage] = true;
               expansionControllers[currentPage].expand();
             }
