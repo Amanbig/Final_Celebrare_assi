@@ -111,10 +111,14 @@ class _FillFormState extends State<FillForm> {
 
   @override
   void initState() {
-    // TODO: implement initState
-    loadData();
+
     super.initState();
+    _initializeData();
   }
+
+  Future<void> _initializeData() async {
+  await loadData();
+}
 
 
   @override
@@ -150,67 +154,94 @@ Future<void> saveData(Map<String,dynamic> formData) async {
 //// Load data from local Storage
 Future<void> loadData() async {
   final prefs = await SharedPreferences.getInstance();
-  
   String? jsonString = prefs.getString('formData');
+
   if (jsonString != null && jsonString.isNotEmpty) {
-    Map<String, dynamic> dataFiles = jsonDecode(jsonString);
+    try {
+      // Decode JSON string
+      Map<String, dynamic> dataFiles = jsonDecode(jsonString);
 
-    setState(() {
+      // Initialize variables with decoded data
+      Map<String, String> groomData = {
+        'groomName': dataFiles['groomName'] ?? '',
+        'groomMother': dataFiles['groomMother'] ?? '',
+        'groomFather': dataFiles['groomFather'] ?? '',
+        'groomGrandmother': dataFiles['groomGrandmother'] ?? '',
+        'groomGrandfather': dataFiles['groomGrandfather'] ?? '',
+      };
 
-      for(int i=0;i<4;i++){
-      isExpandedList[i] = false;
-      isCompletedList[i] = true;
-      expansionControllers[i].collapse();
-    }
+      Map<String, String> brideData = {
+        'brideName': dataFiles['brideName'] ?? '',
+        'brideMother': dataFiles['brideMother'] ?? '',
+        'brideFather': dataFiles['brideFather'] ?? '',
+        'brideGrandmother': dataFiles['brideGrandmother'] ?? '',
+        'brideGrandfather': dataFiles['brideGrandfather'] ?? '',
+      };
 
-      groomControllers[0].text = dataFiles['groomName'] ?? '';
-      brideControllers[0].text = dataFiles['brideName'] ?? '';
-      side = dataFiles['side'] ?? '';
-
-      groomControllers[1].text = dataFiles['groomMother'] != 'Groom Mother' ? dataFiles['groomMother'] ?? '' : '';
-      groomControllers[2].text = dataFiles['groomFather'] != 'Groom Father' ? dataFiles['groomFather'] ?? '' : '';
-      groomControllers[3].text = dataFiles['groomGrandmother'] != 'Groom GrandMother' ? dataFiles['groomGrandmother'] ?? '' : '';
-      groomControllers[4].text = dataFiles['groomGrandfather'] != 'Groom GrandFather' ? dataFiles['groomGrandfather'] ?? '' : '';
-
-      brideControllers[1].text = dataFiles['brideMother'] != 'Bride Mother' ? dataFiles['brideMother'] ?? '' : '';
-      brideControllers[2].text = dataFiles['brideFather'] != 'Bride Father' ? dataFiles['brideFather'] ?? '' : '';
-      brideControllers[3].text = dataFiles['brideGrandmother'] != 'Bride GrandMother' ? dataFiles['brideGrandmother'] ?? '' : '';
-      brideControllers[4].text = dataFiles['brideGrandfather'] != 'Bride GrandFather' ? dataFiles['brideGrandfather'] ?? '' : '';
-
-      brideImageString = dataFiles['brideImage'] ?? '';
-      groomImageString = dataFiles['groomImage'] ?? '';
 
       // Decode the event list from JSON string
-      eventList = (jsonDecode(dataFiles['events'] ?? '[]') as List)
+      List<Map<String, String>> tempEventList = (jsonDecode(dataFiles['events'] ?? '[]') as List)
           .map((e) => Map<String, String>.from(e))
           .toList();
 
-      List<dynamic> musicListJson = jsonDecode(dataFiles['musicList']);
+      List<MusicModel> tempMusicList = (jsonDecode(dataFiles['musicList'] ?? '[]') as List)
+          .map((e) => MusicModel(
+          name: e['name'],
+          audioString: e['audioString'],
+          url: e['url'],
+        )).toList();
 
-      musicList = musicListJson.map((musicJson) => MusicModel.fromJson(musicJson)).toList();
+      Map<String, dynamic> musicFile = jsonDecode(dataFiles['selectedAudio']);
 
-
-      Map<String, dynamic> musicFile = jsonDecode(dataFiles['selectedMusic']);
-
-      MusicModel music = MusicModel(
-        name: musicFile['name'],
-        audioString: musicFile['audioString'],
-        url:musicFile['url']
-      );
-
-      selectedMusic = music;
-      
-      eventList.forEach((event) {
-          for(int i=0;i<4;i++){
-            if(imageUrl[0]['Image${i+1}'] == event['image']){
-              selectedImages[i] = true;
-              break;
-            }
+      // Handle selected images based on event data
+      List<bool> tempSelectedImages = List.generate(4, (i) => false);
+      tempEventList.forEach((event) {
+        for (int i = 0; i < 4; i++) {
+          if (imageUrl[0]['Image${i + 1}'] == event['image']) {
+            tempSelectedImages[i] = true;
+            break;
           }
-        });
-    });
+        }
+      });
+
+      // Use setState once all data is processed
+      setState(() {
+        isExpandedList[0] = false;
+        expansionControllers[0].collapse();
+        for(int i=0;i<4;i++){
+          isCompletedList[i]= true;
+        }
+        groomControllers[0].text = groomData['groomName']!;
+        brideControllers[0].text = brideData['brideName']!;
+        side = dataFiles['side'] ?? '';
+        groomControllers[1].text = groomData['groomMother']!;
+        groomControllers[2].text = groomData['groomFather']!;
+        groomControllers[3].text = groomData['groomGrandmother']!;
+        groomControllers[4].text = groomData['groomGrandfather']!;
+        brideControllers[1].text = brideData['brideMother']!;
+        brideControllers[2].text = brideData['brideFather']!;
+        brideControllers[3].text = brideData['brideGrandmother']!;
+        brideControllers[4].text = brideData['brideGrandfather']!;
+        brideImage = dataFiles['brideImage'] ?? '';
+        groomImage = dataFiles['groomImage'] ?? '';
+        eventList = tempEventList;
+        selectedImages = tempSelectedImages;
+        musicList = tempMusicList;
+        selectedMusic = MusicModel(
+          name: musicFile['name'],
+          audioString: musicFile['audioString'],
+          url: musicFile['url'],
+        );
+      });
+    } catch (e) {
+      print('Error loading data: $e');
+    }
+  } else {
+    print('No saved data found');
   }
 }
+
+
 
 
 //// End of Load data function
@@ -2152,9 +2183,9 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
               List<Map<String, dynamic>> musicListJson = musicList.map((music) => music.toJson()).toList();
 
               data = formData;
-              formData['brideImagePath'] = brideImage;
-              formData['groomImagePath'] = groomImage;
-              formData['selectedMusic'] = jsonEncode(selectedMusic);
+              formData['brideImage'] = brideImage;
+              formData['groomImage'] = groomImage;
+              formData['selectedAudio'] = jsonEncode(selectedMusic);
               formData['musicList'] = jsonEncode(musicListJson);
 
               saveData(formData);
