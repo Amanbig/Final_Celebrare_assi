@@ -1,7 +1,6 @@
 // Import Statements
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -15,6 +14,7 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // End of Import Statements
 
 // Statefull Fill Form Widget
@@ -98,9 +98,16 @@ class _FillFormState extends State<FillForm> {
   final _brideAndGroomKey =
       GlobalKey<FormState>(); // Key to validate bride and groom name form
 
-  List<Map<String,String?>> formData = [];
 
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    loadData();
+    super.initState();
+  }
+
 //// Dispose Method
   @override
   void dispose() {
@@ -110,6 +117,57 @@ class _FillFormState extends State<FillForm> {
     super.dispose();
   }
 //// End of Dispose Method
+
+
+//// Local storage function
+Future<void> saveData(Map<String,dynamic> formData) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Encode entire form data as a string
+  String jsonString = jsonEncode(formData);
+
+  // Save a string value
+  await prefs.setString('formData', jsonString);
+}
+//// End of Local Storage Function
+
+
+//// Load data from local Storage
+Future<void> loadData() async {
+  final prefs = await SharedPreferences.getInstance();
+  
+  String? jsonString = prefs.getString('formData');
+  if (jsonString != null && jsonString.isNotEmpty) {
+    Map<String, dynamic> dataFiles = jsonDecode(jsonString);
+
+    setState(() {
+      groomControllers[0].text = dataFiles['groomName'] ?? '';
+      brideControllers[0].text = dataFiles['brideName'] ?? '';
+      side = dataFiles['side'] ?? '';
+
+      groomControllers[1].text = dataFiles['groomMother'] != 'Groom Mother' ? dataFiles['groomMother'] ?? '' : '';
+      groomControllers[2].text = dataFiles['groomFather'] != 'Groom Father' ? dataFiles['groomFather'] ?? '' : '';
+      groomControllers[3].text = dataFiles['groomGrandmother'] != 'Groom GrandMother' ? dataFiles['groomGrandmother'] ?? '' : '';
+      groomControllers[4].text = dataFiles['groomGrandfather'] != 'Groom GrandFather' ? dataFiles['groomGrandfather'] ?? '' : '';
+
+      brideControllers[1].text = dataFiles['brideMother'] != 'Bride Mother' ? dataFiles['brideMother'] ?? '' : '';
+      brideControllers[2].text = dataFiles['brideFather'] != 'Bride Father' ? dataFiles['brideFather'] ?? '' : '';
+      brideControllers[3].text = dataFiles['brideGrandmother'] != 'Bride GrandMother' ? dataFiles['brideGrandmother'] ?? '' : '';
+      brideControllers[4].text = dataFiles['brideGrandfather'] != 'Bride GrandFather' ? dataFiles['brideGrandfather'] ?? '' : '';
+
+      brideImageString = dataFiles['brideImage'] ?? '';
+      groomImageString = dataFiles['groomImage'] ?? '';
+
+      // Decode the event list from JSON string
+      eventList = (jsonDecode(dataFiles['events'] ?? '[]') as List)
+          .map((e) => Map<String, String>.from(e))
+          .toList();
+    });
+  }
+}
+
+
+//// End of Load data function
 
 //// Play Pause Function
   Future<void> _togglePlayPause() async {
@@ -1123,7 +1181,7 @@ String truncateText(String text, int limit) {
                 width: 136.h,
                 text: "Add event",
                 onPressed: () {
-                  if(eventList.length <= 4){
+                  if(eventList.length < 4){
                   setState(() {
                     isEdit = false;
                     isSelect = true;
@@ -1985,8 +2043,8 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
       text: "Next",
       onPressed: () {
         if ((currentPage == 0 && _brideAndGroomKey.currentState!.validate()) ||
-            (currentPage == 1) ||
-            (currentPage == 2 && eventList.isNotEmpty) ||
+            (currentPage == 1 && ( (brideControllers[1].text.isNotEmpty && brideControllers[2].text.isNotEmpty && groomControllers[1].text.isNotEmpty && groomControllers[2].text.isNotEmpty) || isCompletedList[currentPage])) ||
+            (currentPage == 2 && (eventList.isNotEmpty||isCompletedList[currentPage])) ||
             (currentPage == 3)) {
           setState(() {
             // Mark current step as completed
@@ -1994,6 +2052,28 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
             // Collapse current step
             isExpandedList[currentPage] = false;
             expansionControllers[currentPage].collapse();
+
+            if(currentPage==3){
+              String encodedEventList = jsonEncode(eventList);
+              Map<String, dynamic> formData = {
+              'groomName': groomControllers[0].text,
+              'brideName': brideControllers[0].text,
+              'side': side,
+              'groomMother': groomControllers[1].text.isEmpty ? 'Groom Mother' : groomControllers[1].text,
+              'groomFather': groomControllers[2].text.isEmpty ? 'Groom Father' : groomControllers[2].text,
+              'groomGrandmother': groomControllers[3].text.isEmpty ? 'Groom GrandMother' : groomControllers[3].text,
+              'groomGrandfather': groomControllers[4].text.isEmpty ? 'Groom GrandFather' : groomControllers[4].text,
+              'brideMother': brideControllers[1].text.isEmpty ? 'Bride Mother' : brideControllers[1].text,
+              'brideFather': brideControllers[2].text.isEmpty ? 'Bride Father' : brideControllers[2].text,
+              'brideGrandmother': brideControllers[3].text.isEmpty ? 'Bride GrandMother' : brideControllers[3].text,
+              'brideGrandfather': brideControllers[4].text.isEmpty ? 'Bride GrandFather' : brideControllers[4].text,
+              'brideImage': brideImageString,
+              'groomImage': groomImageString,
+              'events': encodedEventList,  // Store encoded string for `events`
+              'selectedAudio': selectedMusic.audioString,
+              };
+              saveData(formData);
+            }
 
             // Move to next step
             currentPage++;
@@ -2005,33 +2085,18 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
           });
         }
         else if(currentPage==4){
-          setState(() {
-            formData.add({
-            'groomName':groomControllers[0].text.toString(),
-            'brideName':brideControllers[0].text.toString(),
-            'side':side,
-            'groomMother':groomControllers[1].text.isEmpty ? 'Groom Mother' :groomControllers[1].text,
-            'groomFather':groomControllers[2].text.isEmpty ? 'Groom Father' :groomControllers[2].text,
-            'groomGrandmother':groomControllers[1].text.isEmpty ? 'Groom GrandMother':groomControllers[1].text,
-            'groomGrandfather':groomControllers[2].text.isEmpty ? 'Groom GrandFather':groomControllers[2].text,
-            'brideMother':brideControllers[1].text.isEmpty ? 'Bride Mother':brideControllers[1].text,
-            'brideFather':brideControllers[2].text.isEmpty ? 'Bride Father':brideControllers[2].text,
-            'brideGrandmother':brideControllers[1].text.isEmpty ? 'Bride GrandMother':brideControllers[1].text,
-            'brideGrandfather':brideControllers[2].text.isEmpty ? 'Bride GrandFather':brideControllers[2].text,
-            'brideImage':brideImageString,
-            'groomImage':groomImageString,
-            'events':eventList.toString(),
-            'selectedAudio':selectedMusic.audioString,
-          });
-          });
-          print(formData.toString());
+          // sending or storing data
+          // To be implemented
+          // saveData();
         }
          else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text(currentPage == 0
                     ? 'Both Bride And Groom name required'
-                        : (currentPage == 2
+                        :  (currentPage==1 && !isCompletedList[currentPage])?
+                        'Both Bride and Groom Father and Mother name required':
+                         (currentPage == 2 && !isCompletedList[currentPage]
                             ? 'Event List Cannot be empty'
                             : ''))),
           );
