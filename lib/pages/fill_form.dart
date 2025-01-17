@@ -1,5 +1,6 @@
 // Import Statements
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -70,7 +71,6 @@ class _FillFormState extends State<FillForm> {
 }];
 
   List<bool> selectedImages = [false,false,false,false];
-  int countImageSelected = 4;
 
   // Tracks whether in edit mode for events
   bool isEdit = false;
@@ -101,11 +101,25 @@ class _FillFormState extends State<FillForm> {
 
   final ScrollController _scrollController = ScrollController();
 
+  void preloadImages(BuildContext context) {
+  for (var url in imageUrl[0].values) {
+        precacheImage(NetworkImage(url), context);
+    }
+}
+
+
   @override
   void initState() {
     // TODO: implement initState
-    loadData();
     super.initState();
+    loadData();
+  }
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    preloadImages(context);
   }
 
 //// Dispose Method
@@ -162,6 +176,17 @@ Future<void> loadData() async {
       eventList = (jsonDecode(dataFiles['events'] ?? '[]') as List)
           .map((e) => Map<String, String>.from(e))
           .toList();
+      
+      eventList.forEach((event) {
+          for(int i=0;i<4;i++){
+            if(imageUrl[0]['Image${i+1}'] == event['image']){
+              selectedImages[i] = true;
+              break;
+            }
+          }
+        });
+
+
     });
   }
 }
@@ -1100,7 +1125,6 @@ String truncateText(String text, int limit) {
                                                       }
                                                     }
                                                     eventList.remove(event);
-                                                    countImageSelected++;
                                                   });
                                                 },
                                                 padding: EdgeInsets.all(10.h),
@@ -1135,7 +1159,7 @@ String truncateText(String text, int limit) {
                                                             .replaceAll(
                                                                 'Venue - ',
                                                                 '');
-                                                    selectImage = event['image'] ?? imageUrl[0]['Image1'].toString();
+                                                    selectImage = event['image']!;
                                                   });
                                                   // Open the bottom sheet with the event data for editing
                                                   showEventBottomSheet(
@@ -1347,56 +1371,56 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
     padding: const EdgeInsets.all(8.0),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: List.generate(
-        2,
-        (index) {
-          // Calculate the correct image number
-          final imageNumber = start + index + 1;
-          // Calculate the correct index for selectedImages array
-          final selectedIndex = start + index; // This gives unique index for each image
-          // Use proper key format
-          final imageKey = 'Image$imageNumber';
-          
-          return GestureDetector(
-            onTap: () {
-              if(!selectedImages[selectedIndex]) {
-                setSheetState(() {
-                  isSelect = false;
-                  selectImage = imageUrl[0][imageKey] ?? '';
-                  // selectedImages[selectedIndex] = true;
-                });
-                setState(() {
-                  isSelect = false;
-                  selectImage = imageUrl[0][imageKey] ?? '';
-                  // selectedImages[selectedIndex] = true;
-                });
-              }
-            },
-            child: Container(
+      children: List.generate(2, (index) {
+        final imageNumber = start + index + 1;
+        final selectedIndex = start + index;
+        final imageKey = 'Image$imageNumber';
+
+        return GestureDetector(
+          onTap: () {
+            if(!selectedImages[selectedIndex]) {
+            setSheetState(() {
+              isSelect = false;
+              selectImage = imageUrl[0][imageKey] ?? '';
+            });
+            setState(() {
+              isSelect = false;
+              selectImage = imageUrl[0][imageKey] ?? '';
+            });
+            }
+          },
+          child: ColorFiltered(
+            colorFilter: selectedImages[selectedIndex]
+                ? const ColorFilter.matrix(<double>[
+                      0.15, 0.15, 0.15, 0, 0, // Red channel
+                      0.15, 0.15, 0.15, 0, 0, // Green channel
+                      0.15, 0.15, 0.15, 0, 0, // Blue channel
+                      0, 0, 0, 1, 0, // Alpha channel
+                    ])
+
+                : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+            child: CachedNetworkImage(
+              imageUrl: imageUrl[0][imageKey] ?? '',
+              fit: BoxFit.cover,
               width: 136.h,
               height: 258.h,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4.h),
-                image: DecorationImage(
-                  image: NetworkImage(imageUrl[0][imageKey] ?? ''),
-                  fit: BoxFit.cover,
-                  colorFilter: selectedImages[selectedIndex] 
-                    ? ColorFilter.matrix([
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0, 0, 0, 1, 0,
-                      ])
-                    : null,
+              placeholder: (context, url) => Center(
+                child: CircularProgressIndicator(
+                  color: Color.fromRGBO(109, 81, 206, 1),
                 ),
               ),
+              errorWidget: (context, url, error) => Center(
+                child: Icon(Icons.error),
+              ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      }),
     ),
   );
 }
+
+
 
   ///End of Widget build Image Row
 
