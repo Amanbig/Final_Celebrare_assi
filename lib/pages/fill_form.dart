@@ -91,6 +91,7 @@ class _FillFormState extends State<FillForm> {
   List<MusicModel> musicList =
       []; // List of MusicModel objects representing music options
 
+  Map<String,dynamic> data={};
   // Default selected music
   MusicModel selectedMusic =
       MusicModel(name: 'Select Music', audioString: '', url: '');
@@ -111,8 +112,8 @@ class _FillFormState extends State<FillForm> {
   @override
   void initState() {
     // TODO: implement initState
-    super.initState();
     loadData();
+    super.initState();
   }
 
 
@@ -155,6 +156,13 @@ Future<void> loadData() async {
     Map<String, dynamic> dataFiles = jsonDecode(jsonString);
 
     setState(() {
+
+      for(int i=0;i<4;i++){
+      isExpandedList[i] = false;
+      isCompletedList[i] = true;
+      expansionControllers[i].collapse();
+    }
+
       groomControllers[0].text = dataFiles['groomName'] ?? '';
       brideControllers[0].text = dataFiles['brideName'] ?? '';
       side = dataFiles['side'] ?? '';
@@ -176,6 +184,21 @@ Future<void> loadData() async {
       eventList = (jsonDecode(dataFiles['events'] ?? '[]') as List)
           .map((e) => Map<String, String>.from(e))
           .toList();
+
+      List<dynamic> musicListJson = jsonDecode(dataFiles['musicList']);
+
+      musicList = musicListJson.map((musicJson) => MusicModel.fromJson(musicJson)).toList();
+
+
+      Map<String, dynamic> musicFile = jsonDecode(dataFiles['selectedMusic']);
+
+      MusicModel music = MusicModel(
+        name: musicFile['name'],
+        audioString: musicFile['audioString'],
+        url:musicFile['url']
+      );
+
+      selectedMusic = music;
       
       eventList.forEach((event) {
           for(int i=0;i<4;i++){
@@ -185,8 +208,6 @@ Future<void> loadData() async {
             }
           }
         });
-
-
     });
   }
 }
@@ -550,6 +571,8 @@ String truncateText(String text, int limit) {
 
   /// Widget DropDown List
   Widget _buildDropdownList() {
+    final listHeight = (musicList.length + 1) * 70.0;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -557,7 +580,7 @@ String truncateText(String text, int limit) {
         borderRadius: BorderRadius.circular(5),
       ),
       child: SizedBox(
-        height: 270,
+        height: listHeight > 270 ? 270 : listHeight,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: ListView.builder(
@@ -862,149 +885,162 @@ String truncateText(String text, int limit) {
       width: double.maxFinite,
       margin: EdgeInsets.symmetric(horizontal: 28.h),
       child: Column(
-        spacing: 18,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             "Selected music :",
             style: CustomTextStyles.bodyLargeGray60001,
           ),
+          SizedBox(height: 12.h,),
           _buildDropdownButton(),
-          if (isDropdownVisible)
-            _buildDropdownList()
-          else
-            Column(
-              spacing: 40,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(),
-                SizedBox(
-                    width: 220,
-                    child: const Divider(
-                      thickness: 2,
-                    )),
-                Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    "Upload the photos of bride & Groom",
-                    style: CustomTextStyles.bodyLargeGray60001,
+          Stack(
+            children: [
+              // Base layer - Photo upload section
+              Column(
+                spacing: 40,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(),
+                  SizedBox(
+                      width: 220,
+                      child: const Divider(
+                        thickness: 2,
+                      )),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      "Upload the photos of bride & Groom",
+                      style: CustomTextStyles.bodyLargeGray60001,
+                    ),
                   ),
-                ),
-                Container(
-                  width: double.maxFinite,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _pickImage(true),
-                          child: Column(
-                            spacing: 22,
-                            children: [
-                              Container(
-                                height: 82.h,
-                                width: 82.h,
-                                margin: EdgeInsets.only(right: 2.h),
-                                decoration:
-                                    AppDecoration.outlineBluegray10004.copyWith(
-                                  borderRadius:
-                                      BorderRadiusStyle.circleBorder42,
+                  Container(
+                    width: double.maxFinite,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _pickImage(true),
+                            child: Column(
+                              spacing: 22,
+                              children: [
+                                Container(
+                                  height: 82.h,
+                                  width: 82.h,
+                                  margin: EdgeInsets.only(right: 2.h),
+                                  decoration:
+                                      AppDecoration.outlineBluegray10004.copyWith(
+                                    borderRadius:
+                                        BorderRadiusStyle.circleBorder42,
+                                  ),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      brideImage.isEmpty
+                                          ? Icon(
+                                              Icons.file_upload_outlined,
+                                              color:
+                                                  Color.fromRGBO(109, 81, 206, 1),
+                                              size: 36,
+                                            )
+                                          : ClipOval(
+                                              child: Image.file(
+                                                File(brideImage),
+                                                height: 82.h,
+                                                width: 82.h,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            )
+                                    ],
+                                  ),
                                 ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    brideImage.isEmpty
-                                        ? Icon(
-                                            Icons.file_upload_outlined,
-                                            color:
-                                                Color.fromRGBO(109, 81, 206, 1),
-                                            size: 36,
-                                          )
-                                        : ClipOval(
-                                            child: Image.file(
-                                              File(brideImage),
-                                              height: 82.h,
-                                              width: 82.h,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          )
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                "Upload Bride\nImage",
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style:
-                                    CustomTextStyles.bodyLargeGray700.copyWith(
-                                  height: 1.31,
-                                ),
-                              )
-                            ],
+                                Text(
+                                  "Upload Bride\nImage",
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style:
+                                      CustomTextStyles.bodyLargeGray700.copyWith(
+                                    height: 1.31,
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _pickImage(false),
-                          child: Column(
-                            spacing: 24,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                height: 82.h,
-                                width: 82.h,
-                                margin: EdgeInsets.only(right: 8.h),
-                                decoration:
-                                    AppDecoration.outlineBluegray10004.copyWith(
-                                  borderRadius:
-                                      BorderRadiusStyle.circleBorder42,
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _pickImage(false),
+                            child: Column(
+                              spacing: 24,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 82.h,
+                                  width: 82.h,
+                                  margin: EdgeInsets.only(right: 8.h),
+                                  decoration:
+                                      AppDecoration.outlineBluegray10004.copyWith(
+                                    borderRadius:
+                                        BorderRadiusStyle.circleBorder42,
+                                  ),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      groomImage.isEmpty
+                                          ? Icon(
+                                              Icons.file_upload_outlined,
+                                              color:
+                                                  Color.fromRGBO(109, 81, 206, 1),
+                                              size: 36,
+                                            )
+                                          : ClipOval(
+                                              child: Image.file(
+                                                File(groomImage),
+                                                height: 82.h,
+                                                width: 82.h,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            )
+                                    ],
+                                  ),
                                 ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    groomImage.isEmpty
-                                        ? Icon(
-                                            Icons.file_upload_outlined,
-                                            color:
-                                                Color.fromRGBO(109, 81, 206, 1),
-                                            size: 36,
-                                          )
-                                        : ClipOval(
-                                            child: Image.file(
-                                              File(groomImage),
-                                              height: 82.h,
-                                              width: 82.h,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          )
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                "Upload Groom\nImage",
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style:
-                                    CustomTextStyles.bodyLargeGray700.copyWith(
-                                  height: 1.31,
-                                ),
-                              )
-                            ],
+                                Text(
+                                  "Upload Groom\nImage",
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style:
+                                      CustomTextStyles.bodyLargeGray700.copyWith(
+                                    height: 1.31,
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // Overlay layer - Dropdown list
+              if (isDropdownVisible)
+                Positioned(
+                  top: 12,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    color: Colors.white, // Add background color to make it visible
+                    child: _buildDropdownList(),
                   ),
                 ),
-              ],
-            ),
+            ],
+          ),
         ],
       ),
     );
-  }
+}
 
   /// End of Music Section Widget
 
@@ -1502,14 +1538,18 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
         CustomTextFormField(
           controller: eventControllers[2],
           hintText: "Event Venue",
-          textInputAction: TextInputAction.done,
+          textInputAction: TextInputAction.newline,
+          textInputType: TextInputType.multiline,
+          maxLines: null, // This allows the field to grow with the content
           contentPadding: EdgeInsets.symmetric(
             horizontal: 22.h,
             vertical: 14.h,
           ),
           borderDecoration: TextFormFieldStyleHelper.outlineBlueGrayTL10,
           fillColor: appTheme.gray5001,
+          
         ),
+
       ],
     );
   }
@@ -1667,6 +1707,7 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
       child: CustomTextFormField(
         controller: controller,
         hintText: hint,
+        maxLines: 1,
         contentPadding: EdgeInsets.all(12.h),
         borderDecoration: TextFormFieldStyleHelper.outlineBlueGrayTL10,
         fillColor: appTheme.gray5001,
@@ -2038,6 +2079,16 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
                   // Collapse current step
                   isExpandedList[currentPage] = false;
                   expansionControllers[currentPage].collapse();
+                  if(currentPage == 1){
+                    groomControllers[1].text= 'Groom Mother' ;
+                    groomControllers[2].text= 'Groom Father' ;
+                    groomControllers[3].text= 'Groom GrandMother' ;
+                    groomControllers[4].text= 'Groom GrandFather' ;
+                    brideControllers[1].text= 'Bride Mother' ;
+                    brideControllers[2].text= 'Bride Father' ;
+                    brideControllers[3].text= 'Bride GrandMother' ;
+                    brideControllers[4].text= 'Bride GrandFather' ;
+                  }
 
                   // Move to next step
                   currentPage++;
@@ -2077,27 +2128,37 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
             isExpandedList[currentPage] = false;
             expansionControllers[currentPage].collapse();
 
-            if(currentPage==3){
-              String encodedEventList = jsonEncode(eventList);
+
+              if(currentPage==3){
+                String encodedEventList = jsonEncode(eventList);
               Map<String, dynamic> formData = {
               'groomName': groomControllers[0].text,
               'brideName': brideControllers[0].text,
               'side': side,
-              'groomMother': groomControllers[1].text.isEmpty ? 'Groom Mother' : groomControllers[1].text,
-              'groomFather': groomControllers[2].text.isEmpty ? 'Groom Father' : groomControllers[2].text,
-              'groomGrandmother': groomControllers[3].text.isEmpty ? 'Groom GrandMother' : groomControllers[3].text,
-              'groomGrandfather': groomControllers[4].text.isEmpty ? 'Groom GrandFather' : groomControllers[4].text,
-              'brideMother': brideControllers[1].text.isEmpty ? 'Bride Mother' : brideControllers[1].text,
-              'brideFather': brideControllers[2].text.isEmpty ? 'Bride Father' : brideControllers[2].text,
-              'brideGrandmother': brideControllers[3].text.isEmpty ? 'Bride GrandMother' : brideControllers[3].text,
-              'brideGrandfather': brideControllers[4].text.isEmpty ? 'Bride GrandFather' : brideControllers[4].text,
+              'groomMother': groomControllers[1].text,
+              'groomFather': groomControllers[2].text,
+              'groomGrandmother': groomControllers[3].text,
+              'groomGrandfather': groomControllers[4].text,
+              'brideMother': brideControllers[1].text,
+              'brideFather': brideControllers[2].text,
+              'brideGrandmother': brideControllers[3].text,
+              'brideGrandfather': brideControllers[4].text,
               'brideImage': brideImageString,
               'groomImage': groomImageString,
               'events': encodedEventList,  // Store encoded string for `events`
               'selectedAudio': selectedMusic.audioString,
               };
+
+              List<Map<String, dynamic>> musicListJson = musicList.map((music) => music.toJson()).toList();
+
+              data = formData;
+              formData['brideImagePath'] = brideImage;
+              formData['groomImagePath'] = groomImage;
+              formData['selectedMusic'] = jsonEncode(selectedMusic);
+              formData['musicList'] = jsonEncode(musicListJson);
+
               saveData(formData);
-            }
+              }
 
             // Move to next step
             currentPage++;
@@ -2150,7 +2211,29 @@ class MusicModel {
   final String url;
   final String audioString;
 
-  MusicModel(
-      {required this.name, required this.url, required this.audioString});
+  MusicModel({
+    required this.name,
+    required this.url,
+    required this.audioString,
+  });
+
+  // Convert MusicModel to a Map
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'url': url,
+      'audioString': audioString,
+    };
+  }
+
+  // Convert from Map to MusicModel (optional, for decoding)
+  factory MusicModel.fromJson(Map<String, dynamic> json) {
+    return MusicModel(
+      name: json['name'],
+      url: json['url'],
+      audioString: json['audioString'],
+    );
+  }
 }
+
 //End of Music Model Class
