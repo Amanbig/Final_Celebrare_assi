@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sampleas/widgets/transliterate_text_form_field.dart';
 import '../core/app_export.dart';
 
 extension TextFormFieldStyleHelper on CustomTextFormField {
@@ -105,12 +106,13 @@ class CustomTextFormField extends StatelessWidget {
   Widget textFormFieldWidget(BuildContext context) => Container(
         width: width ?? double.maxFinite,
         decoration: boxDecoration,
-        child: TextFormField(
+        child: TransliterateFormField(
+          languageCode: "hi",
           scrollPadding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          controller: controller,
+          controller: controller!,
           focusNode: focusNode,
-          onTapOutside: (event) {
+          onTapOutside: () {
             if (focusNode != null) {
               focusNode?.unfocus();
             } else {
@@ -126,7 +128,7 @@ class CustomTextFormField extends StatelessWidget {
           },
           textInputAction: textInputAction,
           keyboardType: textInputType,
-          maxLines:  maxLines ?? null,
+          maxLines: maxLines ?? null,
           decoration: decoration,
           validator: validator,
         ),
@@ -170,4 +172,3 @@ class CustomTextFormField extends StatelessWidget {
         ),
       );
 }
-

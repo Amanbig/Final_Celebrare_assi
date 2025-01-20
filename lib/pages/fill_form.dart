@@ -1642,11 +1642,23 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
 
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('All fields are required!'),
-        ),
-      );
+      showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: const Text('All fields are required!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+        },
+    );
     }
   }
 
@@ -2190,9 +2202,8 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
 
               saveData(formData);
               }
-
-            // Move to next step
-            currentPage++;
+                // Move to next step
+                currentPage++;
             // Expand next step
             if(currentPage<=3){
               isExpandedList[currentPage] = true;
@@ -2200,10 +2211,8 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
             }
           });
         }
-        else if(currentPage==4){
-          // sending or storing data
-          // To be implemented
-          // saveData();
+        else if(currentPage == 4){
+
         }
          else {
           ScaffoldMessenger.of(context).showSnackBar(
