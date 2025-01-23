@@ -61,6 +61,17 @@ class _TransliterateFormField extends State<TransliterateFormField> {
   // due to new line or whitespace and is set FALSE
   // if its called when user selects suggestion to replace
   // current selected word
+
+  void _clearSuggestions() {
+    _removeOverlay();
+    setState(() {
+      _suggestions = [];
+      currentSelectionStart = null;
+      currentSelectionEnd = null;
+      _isLoading = false;
+    });
+  }
+
   void replaceCurrentSelection(String newWord, bool isAutoUpdate) {
     if (currentSelectionStart == null || currentSelectionEnd == null) {
       // Returns if the selection is empty
@@ -250,7 +261,7 @@ class _TransliterateFormField extends State<TransliterateFormField> {
               return ListTile(
                 title: Text(_suggestions[index]),
                 onTap: () {
-                  replaceCurrentSelection(_suggestions[index], true);
+                  replaceCurrentSelection(_suggestions[index], false);
                   setState(() {
                     _removeOverlay();
                   });
@@ -283,16 +294,21 @@ class _TransliterateFormField extends State<TransliterateFormField> {
       decoration: widget.decoration.copyWith(
           suffix: _isLoading
               ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  width: 8,
+                  height: 8,
+                  child: CircularProgressIndicator(strokeWidth: 1),
                 )
               : null),
       scrollPadding: widget.scrollPadding,
       onTapOutside: (event) {
-        widget.onTapOutside.call();
+        widget.onTapOutside.call(); 
       },
       autofocus: widget.autofocus,
+      onFieldSubmitted: (value) {
+        replaceCurrentSelection(_suggestions[0], false);
+        _clearSuggestions();
+        _isLoading = false;
+      },
       style: widget.style,
       obscureText: widget.obscureText,
       readOnly: widget.readOnly,

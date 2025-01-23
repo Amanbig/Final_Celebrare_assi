@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -20,7 +21,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Statefull Fill Form Widget
 class FillForm extends StatefulWidget {
-  const FillForm({super.key});
+  final String? languageCode;
+  FillForm({super.key,required this.languageCode});
 
   @override
   State<FillForm> createState() => _FillFormState();
@@ -63,14 +65,20 @@ class _FillFormState extends State<FillForm> {
   final List<TextEditingController> eventControllers =
       List.generate(3, (index) => TextEditingController());
 
-  final List<Map<String, String>> imageUrl = [{
-  'Image1': 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=300',  // Wedding venue
-  'Image2': 'https://images.unsplash.com/photo-1464699908537-0954e50791ee?q=80&w=300',  // Reception hall
-  'Image3': 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=300',  // Wedding ceremony
-  'Image4': 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?q=80&w=300',  // Wedding decoration
-}];
+  final List<Map<String, String>> imageUrl = [
+    {
+      'Image1':
+          'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=300', // Wedding venue
+      'Image2':
+          'https://images.unsplash.com/photo-1464699908537-0954e50791ee?q=80&w=300', // Reception hall
+      'Image3':
+          'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=300', // Wedding ceremony
+      'Image4':
+          'https://images.unsplash.com/photo-1520854221256-17451cc331bf?q=80&w=300', // Wedding decoration
+    }
+  ];
 
-  List<bool> selectedImages = [false,false,false,false];
+  List<bool> selectedImages = [false, false, false, false];
 
   // Tracks whether in edit mode for events
   bool isEdit = false;
@@ -91,7 +99,7 @@ class _FillFormState extends State<FillForm> {
   List<MusicModel> musicList =
       []; // List of MusicModel objects representing music options
 
-  Map<String,dynamic> data={};
+  Map<String, dynamic> data = {};
   // Default selected music
   MusicModel selectedMusic =
       MusicModel(name: 'Select Music', audioString: '', url: '');
@@ -99,27 +107,23 @@ class _FillFormState extends State<FillForm> {
   final _brideAndGroomKey =
       GlobalKey<FormState>(); // Key to validate bride and groom name form
 
-
   final ScrollController _scrollController = ScrollController();
 
   void preloadImages(BuildContext context) {
-  for (var url in imageUrl[0].values) {
-        precacheImage(NetworkImage(url), context);
+    for (var url in imageUrl[0].values) {
+      precacheImage(NetworkImage(url), context);
     }
-}
-
+  }
 
   @override
   void initState() {
-
     super.initState();
     _initializeData();
   }
 
   Future<void> _initializeData() async {
-  await loadData();
-}
-
+    await loadData();
+  }
 
   @override
   void didChangeDependencies() {
@@ -137,24 +141,26 @@ class _FillFormState extends State<FillForm> {
   }
 //// End of Dispose Method
 
-
 //// Local storage function
-Future<void> saveData(Map<String,dynamic> formData) async {
-  final prefs = await SharedPreferences.getInstance();
 
-  // Encode entire form data as a string
+// Save data to Hive
+Future<void> saveData(Map<String, dynamic> formData) async {
+  // Open a Hive box
+  final box = await Hive.openBox('formDataBox');
+
+  // Save the formData as a string
   String jsonString = jsonEncode(formData);
+  await box.put('formData', jsonString);
 
-  // Save a string value
-  await prefs.setString('formData', jsonString);
+  // Close the box after saving
+  await box.close();
 }
-//// End of Local Storage Function
 
-
-//// Load data from local Storage
+// Load data from Hive
 Future<void> loadData() async {
-  final prefs = await SharedPreferences.getInstance();
-  String? jsonString = prefs.getString('formData');
+  // Open the Hive box
+  final box = await Hive.openBox('formDataBox');
+  String? jsonString = box.get('formData');
 
   if (jsonString != null && jsonString.isNotEmpty) {
     try {
@@ -178,22 +184,22 @@ Future<void> loadData() async {
         'brideGrandfather': dataFiles['brideGrandfather'] ?? '',
       };
 
+      List<Map<String, String>> tempEventList =
+          (jsonDecode(dataFiles['events'] ?? '[]') as List)
+              .map((e) => Map<String, String>.from(e))
+              .toList();
 
-      // Decode the event list from JSON string
-      List<Map<String, String>> tempEventList = (jsonDecode(dataFiles['events'] ?? '[]') as List)
-          .map((e) => Map<String, String>.from(e))
-          .toList();
-
-      List<MusicModel> tempMusicList = (jsonDecode(dataFiles['musicList'] ?? '[]') as List)
-          .map((e) => MusicModel(
-          name: e['name'],
-          audioString: e['audioString'],
-          url: e['url'],
-        )).toList();
+      List<MusicModel> tempMusicList =
+          (jsonDecode(dataFiles['musicList'] ?? '[]') as List)
+              .map((e) => MusicModel(
+                    name: e['name'],
+                    audioString: e['audioString'],
+                    url: e['url'],
+                  ))
+              .toList();
 
       Map<String, dynamic> musicFile = jsonDecode(dataFiles['selectedAudio']);
 
-      // Handle selected images based on event data
       List<bool> tempSelectedImages = List.generate(4, (i) => false);
       tempEventList.forEach((event) {
         for (int i = 0; i < 4; i++) {
@@ -204,12 +210,11 @@ Future<void> loadData() async {
         }
       });
 
-      // Use setState once all data is processed
       setState(() {
         isExpandedList[0] = false;
         expansionControllers[0].collapse();
-        for(int i=0;i<4;i++){
-          isCompletedList[i]= true;
+        for (int i = 0; i < 4; i++) {
+          isCompletedList[i] = true;
         }
         groomControllers[0].text = groomData['groomName']!;
         brideControllers[0].text = brideData['brideName']!;
@@ -239,11 +244,10 @@ Future<void> loadData() async {
   } else {
     print('No saved data found');
   }
+
+  // Close the box after loading
+  await box.close();
 }
-
-
-
-
 //// End of Load data function
 
 //// Play Pause Function
@@ -298,7 +302,7 @@ Future<void> loadData() async {
           audioString: base64String,
           url: newPath);
       setState(() {
-        musicList.insert(0,newMusic);
+        musicList.insert(0, newMusic);
         selectedMusic = newMusic;
         isDropdownVisible = false;
       });
@@ -374,9 +378,9 @@ Future<void> loadData() async {
   }
 //// End of Get Date Function
 
-String truncateText(String text, int limit) {
-  return text.length > limit ? '${text.substring(0, limit)}...' : text;
-}
+  String truncateText(String text, int limit) {
+    return text.length > limit ? '${text.substring(0, limit)}...' : text;
+  }
 
 //// Format Date Time Function
   String formatDateTime(DateTime date, {TimeOfDay? time}) {
@@ -488,23 +492,23 @@ String truncateText(String text, int limit) {
                 color: Colors.black), // Remove default AppBar shadow
             title: Center(
               child: Image.asset(
-                    ImageConstant.wowInviteImage,
-                    width: 144,
-                    height: 39,
-                  ),
+                ImageConstant.wowInviteImage,
+                width: 144,
+                height: 39,
+              ),
             ),
             actions: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: const Text(
-                    'Need Help ?',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                      color: Color.fromRGBO(153, 153, 153, 1),
-                    ),
+                  'Need Help ?',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w400,
+                    color: Color.fromRGBO(153, 153, 153, 1),
                   ),
+                ),
               ),
             ],
           ),
@@ -516,7 +520,9 @@ String truncateText(String text, int limit) {
         itemBuilder: (context, index) {
           if (index == 0) {
             return Padding(
-              padding:!isExpandedList[index]? const EdgeInsets.only(top: 24):EdgeInsets.zero,
+              padding: !isExpandedList[index]
+                  ? const EdgeInsets.only(top: 24)
+                  : EdgeInsets.zero,
               child: buildCustomExpansionTile(
                 isExpandedList[index] ? 'Create Event' : 'Event Created',
                 '${brideControllers[0].text} weds ${groomControllers[0].text}',
@@ -632,7 +638,9 @@ String truncateText(String text, int limit) {
                 },
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(
-                      item == selectedMusic && index !=0 ? Colors.grey[200] : Colors.white),
+                      item == selectedMusic && index != 0
+                          ? Colors.grey[200]
+                          : Colors.white),
                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius
@@ -673,7 +681,6 @@ String truncateText(String text, int limit) {
                       ),
                       overflow: TextOverflow.ellipsis, // Handles overflow
                     ),
-              
                   ],
                 ),
               );
@@ -749,7 +756,9 @@ String truncateText(String text, int limit) {
     bool isCompleted = isCompletedList[index];
 
     return Padding(
-      padding:!isExpandedList[index]? EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0) : EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
+      padding: !isExpandedList[index]
+          ? EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0)
+          : EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
       child: Material(
         color: Colors.transparent,
         child: Theme(
@@ -772,56 +781,65 @@ String truncateText(String text, int limit) {
               tilePadding: EdgeInsets.zero,
               initiallyExpanded: isExpandedList[index],
               maintainState: true,
-              enabled: isCurrentStep || isPreviousStep || isCompletedList[index],
+              enabled:
+                  isCurrentStep || isPreviousStep || isCompletedList[index],
               title: Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0),
                 child: Row(
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(right: 16.0, left: 12),
-                      child: !isCompleted
-                          ?!isExpandedList[index]? Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isExpandedList[index]
-                                      ? Colors.white
-                                      : Colors.grey[300]!, // Border color
-                                  width: 2.0, // Border width
+                        padding: EdgeInsets.only(right: 16.0, left: 12),
+                        child: !isCompleted
+                            ? !isExpandedList[index]
+                                ? Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isExpandedList[index]
+                                            ? Colors.white
+                                            : Colors.grey[300]!, // Border color
+                                        width: 2.0, // Border width
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.white,
+                                      child: Center(
+                                        child: Text(
+                                          "${index + 1}.",
+                                          style:
+                                              CustomTextStyles.bodyLargePrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container()
+                            : Container(
+                                padding: isExpandedList[index]
+                                    ? EdgeInsets.only(right: 16.0, left: 12)
+                                    : EdgeInsets.zero,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color.fromRGBO(109, 81, 206, 1),
                                 ),
-                              ),
-                              child: CircleAvatar(
-                                backgroundColor: Colors.white,
-                                child: Center(
-                                  child: Text(
-                                    "${index + 1}.",
-                                    style: CustomTextStyles.bodyLargePrimary,
-                                  ),
-                                ),
-                              ),
-                            ):Container()
-                          : Container(
-                            padding:isExpandedList[index]? EdgeInsets.only(right: 16.0, left: 12):EdgeInsets.zero,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color.fromRGBO(109, 81, 206, 1),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Icon(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Icon(
                                     PhosphorIcons.check(),
                                     size: 22.h,
                                     color: Colors.white,
                                   ),
-                            ),
-                          )
-                    ),
+                                ),
+                              )),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            !isCompleted?isExpandedList[index]? '${index+1}. $title':title:title,
+                            !isCompleted
+                                ? isExpandedList[index]
+                                    ? '${index + 1}. $title'
+                                    : title
+                                : title,
                             style: isExpandedList[index]
                                 ? CustomTextStyles.bodyLargePrimary
                                 : TextStyle(
@@ -922,7 +940,9 @@ String truncateText(String text, int limit) {
             "Selected music :",
             style: CustomTextStyles.bodyLargeGray60001,
           ),
-          SizedBox(height: 12.h,),
+          SizedBox(
+            height: 12.h,
+          ),
           _buildDropdownButton(),
           Stack(
             children: [
@@ -959,8 +979,8 @@ String truncateText(String text, int limit) {
                                   height: 82.h,
                                   width: 82.h,
                                   margin: EdgeInsets.only(right: 2.h),
-                                  decoration:
-                                      AppDecoration.outlineBluegray10004.copyWith(
+                                  decoration: AppDecoration.outlineBluegray10004
+                                      .copyWith(
                                     borderRadius:
                                         BorderRadiusStyle.circleBorder42,
                                   ),
@@ -970,8 +990,8 @@ String truncateText(String text, int limit) {
                                       brideImage.isEmpty
                                           ? Icon(
                                               Icons.file_upload_outlined,
-                                              color:
-                                                  Color.fromRGBO(109, 81, 206, 1),
+                                              color: Color.fromRGBO(
+                                                  109, 81, 206, 1),
                                               size: 36,
                                             )
                                           : ClipOval(
@@ -990,8 +1010,8 @@ String truncateText(String text, int limit) {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.center,
-                                  style:
-                                      CustomTextStyles.bodyLargeGray700.copyWith(
+                                  style: CustomTextStyles.bodyLargeGray700
+                                      .copyWith(
                                     height: 1.31,
                                   ),
                                 )
@@ -1010,8 +1030,8 @@ String truncateText(String text, int limit) {
                                   height: 82.h,
                                   width: 82.h,
                                   margin: EdgeInsets.only(right: 8.h),
-                                  decoration:
-                                      AppDecoration.outlineBluegray10004.copyWith(
+                                  decoration: AppDecoration.outlineBluegray10004
+                                      .copyWith(
                                     borderRadius:
                                         BorderRadiusStyle.circleBorder42,
                                   ),
@@ -1021,8 +1041,8 @@ String truncateText(String text, int limit) {
                                       groomImage.isEmpty
                                           ? Icon(
                                               Icons.file_upload_outlined,
-                                              color:
-                                                  Color.fromRGBO(109, 81, 206, 1),
+                                              color: Color.fromRGBO(
+                                                  109, 81, 206, 1),
                                               size: 36,
                                             )
                                           : ClipOval(
@@ -1041,8 +1061,8 @@ String truncateText(String text, int limit) {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.center,
-                                  style:
-                                      CustomTextStyles.bodyLargeGray700.copyWith(
+                                  style: CustomTextStyles.bodyLargeGray700
+                                      .copyWith(
                                     height: 1.31,
                                   ),
                                 )
@@ -1062,7 +1082,8 @@ String truncateText(String text, int limit) {
                   left: 0,
                   right: 0,
                   child: Container(
-                    color: Colors.white, // Add background color to make it visible
+                    color:
+                        Colors.white, // Add background color to make it visible
                     child: _buildDropdownList(),
                   ),
                 ),
@@ -1071,7 +1092,7 @@ String truncateText(String text, int limit) {
         ],
       ),
     );
-}
+  }
 
   /// End of Music Section Widget
 
@@ -1086,7 +1107,7 @@ String truncateText(String text, int limit) {
       child: SingleChildScrollView(
         child: Container(
           width: double.maxFinite,
-          padding:EdgeInsets.only(
+          padding: EdgeInsets.only(
             left: 14.h,
             right: 14.h,
           ),
@@ -1137,8 +1158,10 @@ String truncateText(String text, int limit) {
                                 String eventVenue =
                                     event['details'] ?? 'Event Venue';
 
-                                String eventImage = event['image'] ?? imageUrl[0]['Image1'] ?? '';
-    
+                                String eventImage = event['image'] ??
+                                    imageUrl[0]['Image1'] ??
+                                    '';
+
                                 return Container(
                                   margin: EdgeInsets.only(bottom: 28),
                                   decoration: BoxDecoration(
@@ -1180,68 +1203,78 @@ String truncateText(String text, int limit) {
                                           child: Row(
                                             children: [
                                               CustomIconButton(
-                                                height: 40.h,
-                                                width: 40.h,
-                                                onTap: () {
-                                                  setState(() {
-                                                    // Remove event
-                                                    for(int i=0;i<4;i++){
-                                                      if(imageUrl[0]['Image${i+1}'] == event['image']){
-                                                        selectedImages[i] = false;
-                                                        break;
+                                                  height: 40.h,
+                                                  width: 40.h,
+                                                  onTap: () {
+                                                    setState(() {
+                                                      // Remove event
+                                                      for (int i = 0;
+                                                          i < 4;
+                                                          i++) {
+                                                        if (imageUrl[0][
+                                                                'Image${i + 1}'] ==
+                                                            event['image']) {
+                                                          selectedImages[i] =
+                                                              false;
+                                                          break;
+                                                        }
                                                       }
-                                                    }
-                                                    eventList.remove(event);
-                                                  });
-                                                },
-                                                padding: EdgeInsets.all(10.h),
-                                                decoration: BoxDecoration(
-                                                    color: Color.fromRGBO(255, 0, 0, 0.1),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            50)),
-                                                child: Icon(
-                                                    PhosphorIcons.trash(),
-                                                    size:20.h,
-                                                    color:const Color.fromARGB(255, 200, 4, 4)
-                                                  )
+                                                      eventList.remove(event);
+                                                    });
+                                                  },
+                                                  padding: EdgeInsets.all(10.h),
+                                                  decoration: BoxDecoration(
+                                                      color: Color.fromRGBO(
+                                                          255, 0, 0, 0.1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              50)),
+                                                  child: Icon(
+                                                      PhosphorIcons.trash(),
+                                                      size: 20.h,
+                                                      color:
+                                                          const Color.fromARGB(
+                                                              255, 200, 4, 4))),
+                                              SizedBox(
+                                                width: 34.h,
                                               ),
-                                              SizedBox(width: 34.h,),
                                               CustomIconButton(
-                                                height: 40.h,
-                                                width: 40.h,
-                                                onTap:() {
-                                                  setState(() {
-                                                    isEdit = true;
-                                                    isSelect = false;
-                                                    eventControllers[0].text =
-                                                        event['name'] ??
-                                                            'Event Name';
-                                                    eventControllers[1].text =
-                                                        event['date'] ??
-                                                            'Event Date';
-                                                    // Remove 'Venue: ' prefix from the details when setting the controller
-                                                    eventControllers[2].text =
-                                                        (event['details']!)
-                                                            .replaceAll(
-                                                                'Venue - ',
-                                                                '');
-                                                    selectImage = event['image']!;
-                                                  });
-                                                  // Open the bottom sheet with the event data for editing
-                                                  showEventBottomSheet(
-                                                      context, event);
-                                                },
-                                                padding: EdgeInsets.all(8.h),
-                                                decoration:
-                                                    IconButtonStyleHelper
-                                                        .fillPrimary,
-                                                child: Icon(
-                                                    PhosphorIcons.pencilSimpleLine(),
+                                                  height: 40.h,
+                                                  width: 40.h,
+                                                  onTap: () {
+                                                    setState(() {
+                                                      isEdit = true;
+                                                      isSelect = false;
+                                                      eventControllers[0].text =
+                                                          event['name'] ??
+                                                              'Event Name';
+                                                      eventControllers[1].text =
+                                                          event['date'] ??
+                                                              'Event Date';
+                                                      // Remove 'Venue: ' prefix from the details when setting the controller
+                                                      eventControllers[2].text =
+                                                          (event['details']!)
+                                                              .replaceAll(
+                                                                  'Venue - ',
+                                                                  '');
+                                                      selectImage =
+                                                          event['image']!;
+                                                    });
+                                                    // Open the bottom sheet with the event data for editing
+                                                    showEventBottomSheet(
+                                                        context, event);
+                                                  },
+                                                  padding: EdgeInsets.all(8.h),
+                                                  decoration:
+                                                      IconButtonStyleHelper
+                                                          .fillPrimary,
+                                                  child: Icon(
+                                                    PhosphorIcons
+                                                        .pencilSimpleLine(),
                                                     size: 21.h,
-                                                    color: Color.fromRGBO(109, 81, 206, 1),
-                                                  )
-                                              ),
+                                                    color: Color.fromRGBO(
+                                                        109, 81, 206, 1),
+                                                  )),
                                               Padding(
                                                 padding: EdgeInsets.only(
                                                   left: 10.h,
@@ -1272,18 +1305,17 @@ String truncateText(String text, int limit) {
                 width: 136.h,
                 text: "Add event",
                 onPressed: () {
-                  if(eventList.length < 4){
-                  setState(() {
-                    isEdit = false;
-                    isSelect = true;
-                    eventControllers[0].clear();
-                    eventControllers[1].clear();
-                    eventControllers[2].clear();
-                    selectImage = '';
-                  });
-                  showEventBottomSheet(context, {});
-                  }
-                  else{
+                  if (eventList.length < 4) {
+                    setState(() {
+                      isEdit = false;
+                      isSelect = true;
+                      eventControllers[0].clear();
+                      eventControllers[1].clear();
+                      eventControllers[2].clear();
+                      selectImage = '';
+                    });
+                    showEventBottomSheet(context, {});
+                  } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Please Update or delete Events!'),
@@ -1292,13 +1324,12 @@ String truncateText(String text, int limit) {
                   }
                 },
                 leftIcon: Container(
-                  margin: EdgeInsets.only(right: 6.h),
-                  child: Icon(
+                    margin: EdgeInsets.only(right: 6.h),
+                    child: Icon(
                       PhosphorIcons.plusCircle(),
                       size: 22.h,
-                      color:  Color.fromRGBO(114, 114, 114, 0.72),
-                    )
-                ),
+                      color: Color.fromRGBO(114, 114, 114, 0.72),
+                    )),
                 buttonStyle: CustomButtonStyles.outlineGray,
                 buttonTextStyle: CustomTextStyles.bodyMediumGray600,
               ),
@@ -1333,9 +1364,9 @@ String truncateText(String text, int limit) {
             top: -40.h,
             right: 20.h,
             child: GestureDetector(
-              onTap: (){ 
+              onTap: () {
                 Navigator.pop(context);
-                },
+              },
               child: Container(
                 height: 40.h,
                 width: 40.h,
@@ -1422,8 +1453,8 @@ String truncateText(String text, int limit) {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            _buildImageRow(setSheetState,0),
-            _buildImageRow(setSheetState,2),
+            _buildImageRow(setSheetState, 0),
+            _buildImageRow(setSheetState, 2),
           ],
         ),
       ),
@@ -1433,61 +1464,59 @@ String truncateText(String text, int limit) {
   ///End of Widget build Image Grid
 
   /// Widget build Image Row
-Widget _buildImageRow(StateSetter setSheetState, int start) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: List.generate(2, (index) {
-        final imageNumber = start + index + 1;
-        final selectedIndex = start + index;
-        final imageKey = 'Image$imageNumber';
+  Widget _buildImageRow(StateSetter setSheetState, int start) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(2, (index) {
+          final imageNumber = start + index + 1;
+          final selectedIndex = start + index;
+          final imageKey = 'Image$imageNumber';
 
-        return GestureDetector(
-          onTap: () {
-            if(!selectedImages[selectedIndex]) {
-            setSheetState(() {
-              isSelect = false;
-              selectImage = imageUrl[0][imageKey] ?? '';
-            });
-            setState(() {
-              isSelect = false;
-              selectImage = imageUrl[0][imageKey] ?? '';
-            });
-            }
-          },
-          child: ColorFiltered(
-            colorFilter: selectedImages[selectedIndex]
-                ? const ColorFilter.matrix(<double>[
+          return GestureDetector(
+            onTap: () {
+              if (!selectedImages[selectedIndex]) {
+                setSheetState(() {
+                  isSelect = false;
+                  selectImage = imageUrl[0][imageKey] ?? '';
+                });
+                setState(() {
+                  isSelect = false;
+                  selectImage = imageUrl[0][imageKey] ?? '';
+                });
+              }
+            },
+            child: ColorFiltered(
+              colorFilter: selectedImages[selectedIndex]
+                  ? const ColorFilter.matrix(<double>[
                       0.15, 0.15, 0.15, 0, 0, // Red channel
                       0.15, 0.15, 0.15, 0, 0, // Green channel
                       0.15, 0.15, 0.15, 0, 0, // Blue channel
                       0, 0, 0, 1, 0, // Alpha channel
                     ])
-
-                : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
-            child: CachedNetworkImage(
-              imageUrl: imageUrl[0][imageKey] ?? '',
-              fit: BoxFit.cover,
-              width: 136.h,
-              height: 258.h,
-              placeholder: (context, url) => Center(
-                child: CircularProgressIndicator(
-                  color: Color.fromRGBO(109, 81, 206, 1),
+                  : const ColorFilter.mode(
+                      Colors.transparent, BlendMode.multiply),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl[0][imageKey] ?? '',
+                fit: BoxFit.cover,
+                width: 136.h,
+                height: 258.h,
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(
+                    color: Color.fromRGBO(109, 81, 206, 1),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Center(
+                  child: Icon(Icons.error),
                 ),
               ),
-              errorWidget: (context, url, error) => Center(
-                child: Icon(Icons.error),
-              ),
             ),
-          ),
-        );
-      }),
-    ),
-  );
-}
-
-
+          );
+        }),
+      ),
+    );
+  }
 
   ///End of Widget build Image Row
 
@@ -1543,7 +1572,9 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
       children: [
         CustomTextFormField(
           controller: eventControllers[0],
+          languageCode: widget.languageCode,
           hintText: "Event name",
+          maxLines: 1,
           contentPadding: EdgeInsets.symmetric(
             horizontal: 22.h,
             vertical: 14.h,
@@ -1568,6 +1599,7 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
         SizedBox(height: 26.h),
         CustomTextFormField(
           controller: eventControllers[2],
+          languageCode: widget.languageCode,
           hintText: "Event Venue",
           textInputAction: TextInputAction.newline,
           textInputType: TextInputType.multiline,
@@ -1578,12 +1610,11 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
           ),
           borderDecoration: TextFormFieldStyleHelper.outlineBlueGrayTL10,
           fillColor: appTheme.gray5001,
-          
         ),
-
       ],
     );
   }
+
   /// Widget build Form Fields View
 
   /// Widget build Submit Button View
@@ -1593,13 +1624,12 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
       onPressed: () => _handleSubmit(context, events),
       margin: EdgeInsets.symmetric(horizontal: 74.h),
       rightIcon: Container(
-        margin: EdgeInsets.only(left: 8.h),
-        child: Icon(
+          margin: EdgeInsets.only(left: 8.h),
+          child: Icon(
             PhosphorIcons.arrowCircleRight(),
             size: 24.0,
             color: Colors.white,
-          )
-      ),
+          )),
     );
   }
 
@@ -1609,13 +1639,14 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
   void _handleSubmit(BuildContext context, Map<String, String> events) {
     if (eventControllers[0].text.isNotEmpty &&
         eventControllers[1].text.isNotEmpty &&
-        eventControllers[2].text.isNotEmpty && eventList.length<4) {
+        eventControllers[2].text.isNotEmpty &&
+        eventList.length < 4) {
       setState(() {
         final event = {
           'name': eventControllers[0].text,
           'date': eventControllers[1].text,
           'details': 'Venue - ${eventControllers[2].text}',
-          'image':selectImage
+          'image': selectImage
         };
 
         if (isEdit) {
@@ -1625,8 +1656,8 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
           }
         } else {
           eventList.add(event);
-          for(int i=0;i<4;i++){
-            if(imageUrl[0]['Image${i+1}'] == event['image']){
+          for (int i = 0; i < 4; i++) {
+            if (imageUrl[0]['Image${i + 1}'] == event['image']) {
               selectedImages[i] = true;
               break;
             }
@@ -1643,22 +1674,22 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
       Navigator.pop(context);
     } else {
       showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Error'),
-          content: const Text('All fields are required!'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text('All fields are required!'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
         },
-    );
+      );
     }
   }
 
@@ -1749,6 +1780,7 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
     return Expanded(
       child: CustomTextFormField(
         controller: controller,
+        languageCode: widget.languageCode,
         hintText: hint,
         maxLines: 1,
         contentPadding: EdgeInsets.all(12.h),
@@ -1911,6 +1943,8 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
                   CustomTextFormField(
                     controller: groomControllers[0],
                     hintText: "Groom Name",
+                    languageCode: widget.languageCode,
+                    maxLines: 1,
                     hintStyle: CustomTextStyles.bodySmallGray50002,
                     contentPadding: EdgeInsets.all(12.h),
                     validator: (value) {
@@ -1933,6 +1967,8 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
                   CustomTextFormField(
                     controller: brideControllers[0],
                     hintText: "Bride Name",
+                    languageCode: widget.languageCode,
+                    maxLines: 1,
                     hintStyle: CustomTextStyles.bodySmallGray50002,
                     textInputAction: TextInputAction.done,
                     contentPadding: EdgeInsets.all(12.h),
@@ -2122,23 +2158,23 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
                   // Collapse current step
                   isExpandedList[currentPage] = false;
                   expansionControllers[currentPage].collapse();
-                  if(currentPage == 1){
-                    groomControllers[1].text= 'Groom Mother' ;
-                    groomControllers[2].text= 'Groom Father' ;
-                    groomControllers[3].text= 'Groom GrandMother' ;
-                    groomControllers[4].text= 'Groom GrandFather' ;
-                    brideControllers[1].text= 'Bride Mother' ;
-                    brideControllers[2].text= 'Bride Father' ;
-                    brideControllers[3].text= 'Bride GrandMother' ;
-                    brideControllers[4].text= 'Bride GrandFather' ;
+                  if (currentPage == 1) {
+                    groomControllers[1].text = 'Groom Mother';
+                    groomControllers[2].text = 'Groom Father';
+                    groomControllers[3].text = 'Groom GrandMother';
+                    groomControllers[4].text = 'Groom GrandFather';
+                    brideControllers[1].text = 'Bride Mother';
+                    brideControllers[2].text = 'Bride Father';
+                    brideControllers[3].text = 'Bride GrandMother';
+                    brideControllers[4].text = 'Bride GrandFather';
                   }
 
                   // Move to next step
                   currentPage++;
                   // Expand next step
-                  if(currentPage<=3){
-                  isExpandedList[currentPage] = true;
-                  expansionControllers[currentPage].expand();
+                  if (currentPage <= 3) {
+                    isExpandedList[currentPage] = true;
+                    expansionControllers[currentPage].expand();
                   }
                 });
               }
@@ -2161,8 +2197,14 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
       text: "Next",
       onPressed: () {
         if ((currentPage == 0 && _brideAndGroomKey.currentState!.validate()) ||
-            (currentPage == 1 && ( (brideControllers[1].text.isNotEmpty && brideControllers[2].text.isNotEmpty && groomControllers[1].text.isNotEmpty && groomControllers[2].text.isNotEmpty) || isCompletedList[currentPage])) ||
-            (currentPage == 2 && (eventList.isNotEmpty||isCompletedList[currentPage])) ||
+            (currentPage == 1 &&
+                ((brideControllers[1].text.isNotEmpty &&
+                        brideControllers[2].text.isNotEmpty &&
+                        groomControllers[1].text.isNotEmpty &&
+                        groomControllers[2].text.isNotEmpty) ||
+                    isCompletedList[currentPage])) ||
+            (currentPage == 2 &&
+                (eventList.isNotEmpty || isCompletedList[currentPage])) ||
             (currentPage == 3)) {
           setState(() {
             // Mark current step as completed
@@ -2171,28 +2213,28 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
             isExpandedList[currentPage] = false;
             expansionControllers[currentPage].collapse();
 
-
-              if(currentPage==3){
-                String encodedEventList = jsonEncode(eventList);
+            if (currentPage == 3) {
+              String encodedEventList = jsonEncode(eventList);
               Map<String, dynamic> formData = {
-              'groomName': groomControllers[0].text,
-              'brideName': brideControllers[0].text,
-              'side': side,
-              'groomMother': groomControllers[1].text,
-              'groomFather': groomControllers[2].text,
-              'groomGrandmother': groomControllers[3].text,
-              'groomGrandfather': groomControllers[4].text,
-              'brideMother': brideControllers[1].text,
-              'brideFather': brideControllers[2].text,
-              'brideGrandmother': brideControllers[3].text,
-              'brideGrandfather': brideControllers[4].text,
-              'brideImage': brideImageString,
-              'groomImage': groomImageString,
-              'events': encodedEventList,  // Store encoded string for `events`
-              'selectedAudio': selectedMusic.audioString,
+                'groomName': groomControllers[0].text,
+                'brideName': brideControllers[0].text,
+                'side': side,
+                'groomMother': groomControllers[1].text,
+                'groomFather': groomControllers[2].text,
+                'groomGrandmother': groomControllers[3].text,
+                'groomGrandfather': groomControllers[4].text,
+                'brideMother': brideControllers[1].text,
+                'brideFather': brideControllers[2].text,
+                'brideGrandmother': brideControllers[3].text,
+                'brideGrandfather': brideControllers[4].text,
+                'brideImage': brideImageString,
+                'groomImage': groomImageString,
+                'events': encodedEventList, // Store encoded string for `events`
+                'selectedAudio': selectedMusic.audioString,
               };
 
-              List<Map<String, dynamic>> musicListJson = musicList.map((music) => music.toJson()).toList();
+              List<Map<String, dynamic>> musicListJson =
+                  musicList.map((music) => music.toJson()).toList();
 
               data = formData;
               formData['brideImage'] = brideImage;
@@ -2201,40 +2243,36 @@ Widget _buildImageRow(StateSetter setSheetState, int start) {
               formData['musicList'] = jsonEncode(musicListJson);
 
               saveData(formData);
-              }
-                // Move to next step
-                currentPage++;
+            }
+            // Move to next step
+            currentPage++;
             // Expand next step
-            if(currentPage<=3){
+            if (currentPage <= 3) {
               isExpandedList[currentPage] = true;
               expansionControllers[currentPage].expand();
             }
           });
-        }
-        else if(currentPage == 4){
-
-        }
-         else {
+        } else if (currentPage == 4) {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text(currentPage == 0
                     ? 'Both Bride And Groom name required'
-                        :  (currentPage==1 && !isCompletedList[currentPage])?
-                        'Both Bride and Groom Father and Mother name required':
-                         (currentPage == 2 && !isCompletedList[currentPage]
+                    : (currentPage == 1 && !isCompletedList[currentPage])
+                        ? 'Both Bride and Groom Father and Mother name required'
+                        : (currentPage == 2 && !isCompletedList[currentPage]
                             ? 'Event List Cannot be empty'
                             : ''))),
           );
         }
       },
       rightIcon: Container(
-        margin: EdgeInsets.only(left: 6.h),
-        child: Icon(
-                        PhosphorIcons.arrowCircleRight(),
-                        size: 22.h,
-                        color: Colors.white,
-                      )
-      ),
+          margin: EdgeInsets.only(left: 6.h),
+          child: Icon(
+            PhosphorIcons.arrowCircleRight(),
+            size: 22.h,
+            color: Colors.white,
+          )),
     );
   }
 

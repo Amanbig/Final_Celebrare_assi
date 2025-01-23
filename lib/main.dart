@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:sampleas/pages/fill_form.dart';
+import 'package:sampleas/pages/language_page.dart';
 import 'core/app_export.dart';
 
 var globalMessengerKey = GlobalKey<ScaffoldMessengerState>();
-void main() {
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await Hive.initFlutter();
   runApp(MyApp());
 }
 
@@ -17,11 +21,9 @@ class MyApp extends StatelessWidget {
       builder: (context, orientation, deviceType) {
         return MaterialApp(
           theme: theme,
-          title: 'sampleas',
-          debugShowCheckedModeBanner: false,
           initialRoute: '/',
           routes:{
-            '/': (context) => FillForm(),
+            '/': (context) => LanguagePage(),
           },
           builder: (context, child) {
             return MediaQuery(
