@@ -1586,6 +1586,7 @@ Future<void> loadData() async {
         CustomTextFormField(
           controller: eventControllers[1],
           hintText: "Event Date & Time",
+          languageCode: 'en',
           contentPadding: EdgeInsets.symmetric(
             horizontal: 22.h,
             vertical: 14.h,
