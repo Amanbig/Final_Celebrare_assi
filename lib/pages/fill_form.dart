@@ -219,6 +219,8 @@ class _FillFormState extends State<FillForm> {
 
   final ScrollController _scrollController = ScrollController();
 
+  bool caricature = true;
+
   void preloadImages(BuildContext context) {
     for (var url in imageUrl[0].values) {
       precacheImage(NetworkImage(url), context);
@@ -347,10 +349,11 @@ class _FillFormState extends State<FillForm> {
             audioString: musicFile['audioString'],
             url: musicFile['url'],
           );
-          widget.caricature = dataFiles['caricature'];
           if (!widget.caricature) {
             isExpandedList[3] = true;
             expansionControllers[3].expand();
+            widget.caricature = true;
+            caricature = false;
           }
         });
       } catch (e) {
@@ -1108,8 +1111,8 @@ class _FillFormState extends State<FillForm> {
                     alignment: Alignment.center,
                     child: Text(
                       widget.caricature
-                          ? "Upload the photos of bride & Groom"
-                          : "",
+                          ? caricature? "Upload the photos of bride & Groom":"Please Upload Bride & Groom Images\nBefore Proceeding"
+                          :"",
                       style: CustomTextStyles.bodyLargeGray60001,
                     ),
                   ),
@@ -2394,7 +2397,6 @@ class _FillFormState extends State<FillForm> {
               formData['groomImage'] = groomImage;
               formData['selectedAudio'] = jsonEncode(selectedMusic);
               formData['musicList'] = jsonEncode(musicListJson);
-              formData['caricature'] = widget.caricature;
 
               saveData(formData);
             }
