@@ -21,7 +21,8 @@ import 'package:path_provider/path_provider.dart';
 // Statefull Fill Form Widget
 class FillForm extends StatefulWidget {
   final String? languageCode;
-  FillForm({super.key,required this.languageCode});
+  bool caricature;
+  FillForm({super.key, required this.languageCode, this.caricature = false});
 
   @override
   State<FillForm> createState() => _FillFormState();
@@ -92,16 +93,126 @@ class _FillFormState extends State<FillForm> {
 
   bool isPlaying = false; // Track whether audio is currently playing
 
+  int? currentlyPlayingIndex;
+
   bool isDropdownVisible =
       false; // Controls visibility of dropdown for music selection
 
-  List<MusicModel> musicList =
-      []; // List of MusicModel objects representing music options
+  List<MusicModel> musicList = [
+    MusicModel(
+        name: 'Aaj Sajeya',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FAaj-sajeya.mp3?alt=media&token=affe9265-89db-4160-931e-b5c00625c2fe',
+        audioString: ''),
+    MusicModel(
+        name: 'Baaju Band',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FBaaju%20Band%20%20Aakanksha%20Sharma%20%20Nizam%20Khan%20%20Dhanraj%20Dadhich%20%20Rajasthani%20Folk%20Songs.mp3?alt=media&token=205c634d-141e-4056-b496-41a4d7d01e1d',
+        audioString: ''),
+    MusicModel(
+        name: 'Chhap Tilak',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FChhap_tilak.mp3?alt=media&token=41d64aff-2fbe-40ee-a806-5ddf8965e6a0',
+        audioString: ''),
+    MusicModel(
+        name: 'Din Shagna X Kabira Maan Ja',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FDin%20Shagna%20Da%20X%20Kabira%20Maan%20Ja.mp3?alt=media&token=c6a4b7ea-64f3-49e6-aa32-0e4bbf4ee275',
+        audioString: ''),
+    MusicModel(
+        name: 'VakraTunda Mahakay',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FVakratunda%20Mahakaya%20%E0%A4%B5%E0%A4%95%E0%A4%B0%E0%A4%A4%E0%A4%A1%20%E0%A4%AE%E0%A4%B9%E0%A4%95%E0%A4%AF%20%20Ganesh%20Mantra%20%20Anup%20Jalota%20%20Hindi%20English%20Lyrics.mp3?alt=media&token=5ae7d78e-6f7d-4e8c-9cc0-0a70f9c6de5b',
+        audioString: ''),
+    MusicModel(
+        name: 'Ek Dil Ek Jaan',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FEk%20Dil%20Ek%20Jaan%20(From%20_Padmaavat_).mp3?alt=media&token=abf60c2b-ac41-4ba8-a64c-85990ad00bf4',
+        audioString: ''),
+    MusicModel(
+        name: 'Wedding Songs Mashup',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FHindi%20Wedding%20Songs%20Mashup%20%20Shaadi%20Songs%20%20Saajanji%20Ghar%20Aaye%20%20Bole%20Chudiyan%20%20Mashup.mp3?alt=media&token=53d7ad80-e89d-4a48-9a67-544178ff8f9c',
+        audioString: ''),
+    MusicModel(
+        name: 'Kesariya',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FKesariya.mp3?alt=media&token=6321f490-c4a3-498e-995e-11eaae27b314',
+        audioString: ''),
+    MusicModel(
+        name: 'Krrish Flute',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FKrrish%20Flute.mp3?alt=media&token=6434a60c-3b00-46a4-bdea-a2a3b69f80a3',
+        audioString: ''),
+    MusicModel(
+        name: 'Ishq(slowed and reverb)',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FLAAL%20ISHQ%20%20(slowed%20%26%20reverb)%40Subratasamanta834.mp3?alt=media&token=5f7d6ee2-88b0-4179-86d4-1a5e0f9b8144',
+        audioString: ''),
+    MusicModel(
+        name: 'Madhanya',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FMadhanya.mp3?alt=media&token=7f483529-5b06-45f6-b379-4e02493d860e',
+        audioString: ''),
+    MusicModel(
+        name: 'Mast Magan',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FMast_Magan.mp3?alt=media&token=978b9d25-a279-4059-a0e8-c0e43b12b913',
+        audioString: ''),
+    MusicModel(
+        name: 'Matthe Te Chamkaan',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FMatthe_te_chamkaan.mp3?alt=media&token=5a976cbd-2f95-49a0-8441-9fc06d9654c8',
+        audioString: ''),
+    MusicModel(
+        name: 'Saajanji Ghar Aaye',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FSaajanji%20Ghar%20Aaye.mp3?alt=media&token=c2a05848-7c43-4be5-bf06-c87d232b57b4',
+        audioString: ''),
+    MusicModel(
+        name: 'Tujh Me Rab Dikhta hai(Instrumental)',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FTujh_mein_rab_dikhta_hai-intrumental.mp3?alt=media&token=af9bfe05-d2c0-4a4e-8057-3b449432bb99',
+        audioString: ''),
+    MusicModel(
+        name: 'Tujh Me Rab Dikhta Hai',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FTujh_mein_rab_dikhta_hai.mp3?alt=media&token=12a6bdbc-da0d-4969-8bee-708a489a1038',
+        audioString: ''),
+    MusicModel(
+        name: 'Tum Mile',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FTum_mile.mp3?alt=media&token=18963aa1-d910-4c41-94cf-5ec04dcedd21',
+        audioString: ''),
+    MusicModel(
+        name: 'Ullam Paadum',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FUllam%20Paadum%20-%20Wedding%20Song%20%202%20States.mp3?alt=media&token=49be6aac-41c1-4fc1-bb29-8d93bfc3b6fd',
+        audioString: ''),
+    MusicModel(
+        name: 'Romantic JukeBox',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FWedding%20Mashup%20Songs%20Mega%20Mix%20Romantic%20%20Dance%20%20Jukebox%20%20Nonstop%20%20VDj%20Royal.mp3?alt=media&token=9608f494-0440-4f52-9e51-f150a2dbf615',
+        audioString: ''),
+    MusicModel(
+        name: 'low Reverb Mashup',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FWedding%20Mashup%20%5BSlowed%20%20Reverb%5D%20Aadi%20Production.mp3?alt=media&token=60c970cd-0833-4763-93d6-78119cebe38c',
+        audioString: ''),
+    MusicModel(
+        name: 'Kanha Soja Zara Flute',
+        url:
+            'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FWedding%20Function%20-%20Flute%20!%20Bgm.mp3?alt=media&token=151a91d9-5448-4ff5-80ea-14891699c808',
+        audioString: ''),
+  ]; // List of MusicModel objects representing music options
 
   Map<String, dynamic> data = {};
   // Default selected music
-  MusicModel selectedMusic =
-      MusicModel(name: 'Select Music', audioString: '', url: '');
+  MusicModel selectedMusic = MusicModel(
+      name: 'Aaj Sajeya',
+      url:
+          'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FAaj-sajeya.mp3?alt=media&token=affe9265-89db-4160-931e-b5c00625c2fe',
+      audioString: '');
 
   final _brideAndGroomKey =
       GlobalKey<FormState>(); // Key to validate bride and groom name form
@@ -143,124 +254,144 @@ class _FillFormState extends State<FillForm> {
 //// Local storage function
 
 // Save data to Hive
-Future<void> saveData(Map<String, dynamic> formData) async {
-  // Open a Hive box
-  final box = await Hive.openBox('formDataBox');
+  Future<void> saveData(Map<String, dynamic> formData) async {
+    // Open a Hive box
+    final box = await Hive.openBox('formDataBox');
 
-  // Save the formData as a string
-  String jsonString = jsonEncode(formData);
-  await box.put('formData', jsonString);
+    // Save the formData as a string
+    String jsonString = jsonEncode(formData);
+    await box.put('formData', jsonString);
 
-  // Close the box after saving
-  await box.close();
-}
-
-// Load data from Hive
-Future<void> loadData() async {
-  // Open the Hive box
-  final box = await Hive.openBox('formDataBox');
-  String? jsonString = box.get('formData');
-
-  if (jsonString != null && jsonString.isNotEmpty) {
-    try {
-      // Decode JSON string
-      Map<String, dynamic> dataFiles = jsonDecode(jsonString);
-
-      // Initialize variables with decoded data
-      Map<String, String> groomData = {
-        'groomName': dataFiles['groomName'] ?? '',
-        'groomMother': dataFiles['groomMother'] ?? '',
-        'groomFather': dataFiles['groomFather'] ?? '',
-        'groomGrandmother': dataFiles['groomGrandmother'] ?? '',
-        'groomGrandfather': dataFiles['groomGrandfather'] ?? '',
-      };
-
-      Map<String, String> brideData = {
-        'brideName': dataFiles['brideName'] ?? '',
-        'brideMother': dataFiles['brideMother'] ?? '',
-        'brideFather': dataFiles['brideFather'] ?? '',
-        'brideGrandmother': dataFiles['brideGrandmother'] ?? '',
-        'brideGrandfather': dataFiles['brideGrandfather'] ?? '',
-      };
-
-      List<Map<String, String>> tempEventList =
-          (jsonDecode(dataFiles['events'] ?? '[]') as List)
-              .map((e) => Map<String, String>.from(e))
-              .toList();
-
-      List<MusicModel> tempMusicList =
-          (jsonDecode(dataFiles['musicList'] ?? '[]') as List)
-              .map((e) => MusicModel(
-                    name: e['name'],
-                    audioString: e['audioString'],
-                    url: e['url'],
-                  ))
-              .toList();
-
-      Map<String, dynamic> musicFile = jsonDecode(dataFiles['selectedAudio']);
-
-      List<bool> tempSelectedImages = List.generate(4, (i) => false);
-      tempEventList.forEach((event) {
-        for (int i = 0; i < 4; i++) {
-          if (imageUrl[0]['Image${i + 1}'] == event['image']) {
-            tempSelectedImages[i] = true;
-            break;
-          }
-        }
-      });
-
-      setState(() {
-        isExpandedList[0] = false;
-        expansionControllers[0].collapse();
-        for (int i = 0; i < 4; i++) {
-          isCompletedList[i] = true;
-        }
-        groomControllers[0].text = groomData['groomName']!;
-        brideControllers[0].text = brideData['brideName']!;
-        side = dataFiles['side'] ?? '';
-        groomControllers[1].text = groomData['groomMother']!;
-        groomControllers[2].text = groomData['groomFather']!;
-        groomControllers[3].text = groomData['groomGrandmother']!;
-        groomControllers[4].text = groomData['groomGrandfather']!;
-        brideControllers[1].text = brideData['brideMother']!;
-        brideControllers[2].text = brideData['brideFather']!;
-        brideControllers[3].text = brideData['brideGrandmother']!;
-        brideControllers[4].text = brideData['brideGrandfather']!;
-        brideImage = dataFiles['brideImage'] ?? '';
-        groomImage = dataFiles['groomImage'] ?? '';
-        eventList = tempEventList;
-        selectedImages = tempSelectedImages;
-        musicList = tempMusicList;
-        selectedMusic = MusicModel(
-          name: musicFile['name'],
-          audioString: musicFile['audioString'],
-          url: musicFile['url'],
-        );
-      });
-    } catch (e) {
-      print('Error loading data: $e');
-    }
-  } else {
-    print('No saved data found');
+    // Close the box after saving
+    await box.close();
   }
 
-  // Close the box after loading
-  await box.close();
-}
+// Load data from Hive
+  Future<void> loadData() async {
+    // Open the Hive box
+    final box = await Hive.openBox('formDataBox');
+    String? jsonString = box.get('formData');
+
+    if (jsonString != null && jsonString.isNotEmpty) {
+      try {
+        // Decode JSON string
+        Map<String, dynamic> dataFiles = jsonDecode(jsonString);
+
+        // Initialize variables with decoded data
+        Map<String, String> groomData = {
+          'groomName': dataFiles['groomName'] ?? '',
+          'groomMother': dataFiles['groomMother'] ?? '',
+          'groomFather': dataFiles['groomFather'] ?? '',
+          'groomGrandmother': dataFiles['groomGrandmother'] ?? '',
+          'groomGrandfather': dataFiles['groomGrandfather'] ?? '',
+        };
+
+        Map<String, String> brideData = {
+          'brideName': dataFiles['brideName'] ?? '',
+          'brideMother': dataFiles['brideMother'] ?? '',
+          'brideFather': dataFiles['brideFather'] ?? '',
+          'brideGrandmother': dataFiles['brideGrandmother'] ?? '',
+          'brideGrandfather': dataFiles['brideGrandfather'] ?? '',
+        };
+
+        List<Map<String, String>> tempEventList =
+            (jsonDecode(dataFiles['events'] ?? '[]') as List)
+                .map((e) => Map<String, String>.from(e))
+                .toList();
+
+        List<MusicModel> tempMusicList =
+            (jsonDecode(dataFiles['musicList'] ?? '[]') as List)
+                .map((e) => MusicModel(
+                      name: e['name'],
+                      audioString: e['audioString'],
+                      url: e['url'],
+                    ))
+                .toList();
+
+        Map<String, dynamic> musicFile = jsonDecode(dataFiles['selectedAudio']);
+
+        List<bool> tempSelectedImages = List.generate(4, (i) => false);
+        tempEventList.forEach((event) {
+          for (int i = 0; i < 4; i++) {
+            if (imageUrl[0]['Image${i + 1}'] == event['image']) {
+              tempSelectedImages[i] = true;
+              break;
+            }
+          }
+        });
+
+        setState(() {
+          isExpandedList[0] = false;
+          expansionControllers[0].collapse();
+          for (int i = 0; i < 4; i++) {
+            isCompletedList[i] = true;
+          }
+          groomControllers[0].text = groomData['groomName']!;
+          brideControllers[0].text = brideData['brideName']!;
+          side = dataFiles['side'] ?? '';
+          groomControllers[1].text = groomData['groomMother']!;
+          groomControllers[2].text = groomData['groomFather']!;
+          groomControllers[3].text = groomData['groomGrandmother']!;
+          groomControllers[4].text = groomData['groomGrandfather']!;
+          brideControllers[1].text = brideData['brideMother']!;
+          brideControllers[2].text = brideData['brideFather']!;
+          brideControllers[3].text = brideData['brideGrandmother']!;
+          brideControllers[4].text = brideData['brideGrandfather']!;
+          brideImage = dataFiles['brideImage'] ?? '';
+          groomImage = dataFiles['groomImage'] ?? '';
+          eventList = tempEventList;
+          selectedImages = tempSelectedImages;
+          musicList = tempMusicList;
+          selectedMusic = MusicModel(
+            name: musicFile['name'],
+            audioString: musicFile['audioString'],
+            url: musicFile['url'],
+          );
+          widget.caricature = dataFiles['caricature'];
+          if (!widget.caricature) {
+            isExpandedList[3] = true;
+            expansionControllers[3].expand();
+          }
+        });
+      } catch (e) {
+        print('Error loading data: $e');
+      }
+    } else {
+      print('No saved data found');
+    }
+
+    // Close the box after loading
+    await box.close();
+  }
 //// End of Load data function
 
 //// Play Pause Function
-  Future<void> _togglePlayPause() async {
-    if (selectedMusic.url.isEmpty) return;
-    if (isPlaying) {
+
+  Future<void> _togglePlayPause(int index) async {
+    if (currentlyPlayingIndex == index && isPlaying) {
+      // Pause if the current track is playing
       await _audioPlayer.pause();
+      setState(() {
+        isPlaying = false;
+        currentlyPlayingIndex = null;
+      });
     } else {
-      await _audioPlayer.play(DeviceFileSource(selectedMusic.url));
+      // Play the selected track
+      final selectedTrack = index == 0 ? null : musicList[index - 1];
+      if (selectedTrack != null) {
+        if (selectedTrack.audioString == '') {
+          await _audioPlayer.play(UrlSource(selectedTrack.url));
+        } else {
+          await _audioPlayer.play(DeviceFileSource(selectedTrack.url));
+        }
+      }
+      setState(() {
+        isPlaying = true;
+        currentlyPlayingIndex = index;
+      });
     }
-    setState(() {
-      isPlaying = !isPlaying;
-    });
   }
+
 //// End of Play and Pause Function
 
 //// Get Random File Name Function
@@ -568,9 +699,15 @@ Future<void> loadData() async {
   /// Widget Build Drop Down Button
   Widget _buildDropdownButton() {
     return GestureDetector(
-      onTap: () => setState(() {
-        isDropdownVisible = !isDropdownVisible;
-      }),
+      onTap: () async {
+        await _audioPlayer.stop();
+        setState(() {
+          isDropdownVisible = !isDropdownVisible;
+          if (!isDropdownVisible) {
+            isPlaying = false;
+          }
+        });
+      },
       child: Container(
         width: double.infinity,
         height: 44,
@@ -619,71 +756,81 @@ Future<void> loadData() async {
         height: listHeight > 270 ? 270 : listHeight,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: ListView.builder(
-            itemCount: musicList.length + 1,
+          child: RawScrollbar(
             controller: _scrollController,
-            itemBuilder: (context, index) {
-              final item = index == 0 ? null : musicList[index - 1];
-              return TextButton(
-                onPressed: () {
-                  if (index == 0) {
-                    _pickFile();
-                  } else {
-                    setState(() {
-                      selectedMusic = item!;
-                      isDropdownVisible = false;
-                    });
-                  }
-                },
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(
-                      item == selectedMusic && index != 0
-                          ? Colors.grey[200]
-                          : Colors.white),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius
-                          .zero, // Set border radius to zero for sharp corners
+            thumbVisibility: true, // Makes the scrollbar always visible
+            thumbColor: const Color.fromRGBO(109, 81, 206, 1), // Custom color
+            thickness: 6, // Thickness of the scrollbar
+            radius: const Radius.circular(
+                5), // Rounded edges for the scrollbar thumb
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: musicList.length + 1,
+              itemBuilder: (context, index) {
+                final item = index == 0 ? null : musicList[index - 1];
+                final isSelected = item == selectedMusic && index != 0;
+                final isCurrentlyPlaying =
+                    currentlyPlayingIndex == index && isPlaying;
+
+                return TextButton(
+                  onPressed: () {
+                    if (index == 0) {
+                      _pickFile();
+                    } else {
+                      setState(() {
+                        selectedMusic = item!;
+                        isDropdownVisible = false;
+                      });
+                    }
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(
+                        isSelected ? Colors.grey[200] : Colors.white),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.zero, // Set border radius to zero
+                      ),
                     ),
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: index == 0
-                      ? MainAxisAlignment.center
-                      : MainAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        _togglePlayPause();
-                      },
-                      child: Icon(
-                        index == 0
-                            ? Icons.file_upload_outlined
-                            : isPlaying
-                                ? Icons.pause_circle_outline
-                                : Icons.play_circle_outlined,
-                        color: Color.fromRGBO(109, 81, 206, 1),
-                        size: 25,
+                  child: Row(
+                    mainAxisAlignment: index == 0
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          _togglePlayPause(index);
+                        },
+                        child: Icon(
+                          index == 0
+                              ? Icons.file_upload_outlined
+                              : isCurrentlyPlaying
+                                  ? Icons.pause_circle_outline
+                                  : Icons.play_circle_outlined,
+                          color: const Color.fromRGBO(109, 81, 206, 1),
+                          size: 25,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      truncateText(item?.name ?? 'Upload your own music', 24),
-                      style: TextStyle(
-                        color: index == 0
-                            ? Color.fromRGBO(109, 81, 206, 1)
-                            : Colors.grey[800],
-                        fontSize: 16,
-                        decoration: index == 0
-                            ? TextDecoration.underline
-                            : TextDecoration.none,
+                      const SizedBox(width: 8),
+                      Text(
+                        truncateText(item?.name ?? 'Upload your own music', 24),
+                        style: TextStyle(
+                          color: index == 0
+                              ? const Color.fromRGBO(109, 81, 206, 1)
+                              : Colors.grey[800],
+                          fontSize: 16,
+                          decoration: index == 0
+                              ? TextDecoration.underline
+                              : TextDecoration.none,
+                        ),
+                        overflow: TextOverflow.ellipsis, // Handles overflow
                       ),
-                      overflow: TextOverflow.ellipsis, // Handles overflow
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -952,126 +1099,132 @@ Future<void> loadData() async {
                 children: [
                   SizedBox(),
                   SizedBox(
-                      width: 220,
-                      child: const Divider(
-                        thickness: 2,
-                      )),
+                    width: 220,
+                    child: const Divider(
+                      thickness: 2,
+                    ),
+                  ),
                   Align(
                     alignment: Alignment.center,
                     child: Text(
-                      "Upload the photos of bride & Groom",
+                      widget.caricature
+                          ? "Upload the photos of bride & Groom"
+                          : "",
                       style: CustomTextStyles.bodyLargeGray60001,
                     ),
                   ),
-                  Container(
-                    width: double.maxFinite,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => _pickImage(true),
-                            child: Column(
-                              spacing: 22,
-                              children: [
-                                Container(
-                                  height: 82.h,
-                                  width: 82.h,
-                                  margin: EdgeInsets.only(right: 2.h),
-                                  decoration: AppDecoration.outlineBluegray10004
-                                      .copyWith(
-                                    borderRadius:
-                                        BorderRadiusStyle.circleBorder42,
-                                  ),
-                                  child: Stack(
-                                    alignment: Alignment.center,
+                  !widget.caricature
+                      ? SizedBox(
+                          width: 180.h,
+                          height: 180.h,
+                        )
+                      : Container(
+                          width: double.maxFinite,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => _pickImage(true),
+                                  child: Column(
+                                    spacing: 22,
                                     children: [
-                                      brideImage.isEmpty
-                                          ? Icon(
-                                              Icons.file_upload_outlined,
-                                              color: Color.fromRGBO(
-                                                  109, 81, 206, 1),
-                                              size: 36,
-                                            )
-                                          : ClipOval(
-                                              child: Image.file(
-                                                File(brideImage),
-                                                height: 82.h,
-                                                width: 82.h,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            )
+                                      Container(
+                                        height: 82.h,
+                                        width: 82.h,
+                                        margin: EdgeInsets.only(right: 2.h),
+                                        decoration: AppDecoration
+                                            .outlineBluegray10004
+                                            .copyWith(
+                                          borderRadius:
+                                              BorderRadiusStyle.circleBorder42,
+                                        ),
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            brideImage.isEmpty
+                                                ? Icon(
+                                                    Icons.file_upload_outlined,
+                                                    color: Color.fromRGBO(
+                                                        109, 81, 206, 1),
+                                                    size: 36,
+                                                  )
+                                                : ClipOval(
+                                                    child: Image.file(
+                                                      File(brideImage),
+                                                      height: 82.h,
+                                                      width: 82.h,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        "Upload Bride\nImage",
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: CustomTextStyles.bodyLargeGray700
+                                            .copyWith(height: 1.31),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                Text(
-                                  "Upload Bride\nImage",
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: CustomTextStyles.bodyLargeGray700
-                                      .copyWith(
-                                    height: 1.31,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => _pickImage(false),
-                            child: Column(
-                              spacing: 24,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Container(
-                                  height: 82.h,
-                                  width: 82.h,
-                                  margin: EdgeInsets.only(right: 8.h),
-                                  decoration: AppDecoration.outlineBluegray10004
-                                      .copyWith(
-                                    borderRadius:
-                                        BorderRadiusStyle.circleBorder42,
-                                  ),
-                                  child: Stack(
-                                    alignment: Alignment.center,
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => _pickImage(false),
+                                  child: Column(
+                                    spacing: 24,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      groomImage.isEmpty
-                                          ? Icon(
-                                              Icons.file_upload_outlined,
-                                              color: Color.fromRGBO(
-                                                  109, 81, 206, 1),
-                                              size: 36,
-                                            )
-                                          : ClipOval(
-                                              child: Image.file(
-                                                File(groomImage),
-                                                height: 82.h,
-                                                width: 82.h,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            )
+                                      Container(
+                                        height: 82.h,
+                                        width: 82.h,
+                                        margin: EdgeInsets.only(right: 8.h),
+                                        decoration: AppDecoration
+                                            .outlineBluegray10004
+                                            .copyWith(
+                                          borderRadius:
+                                              BorderRadiusStyle.circleBorder42,
+                                        ),
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            groomImage.isEmpty
+                                                ? Icon(
+                                                    Icons.file_upload_outlined,
+                                                    color: Color.fromRGBO(
+                                                        109, 81, 206, 1),
+                                                    size: 36,
+                                                  )
+                                                : ClipOval(
+                                                    child: Image.file(
+                                                      File(groomImage),
+                                                      height: 82.h,
+                                                      width: 82.h,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        "Upload Groom\nImage",
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: CustomTextStyles.bodyLargeGray700
+                                            .copyWith(height: 1.31),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                Text(
-                                  "Upload Groom\nImage",
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: CustomTextStyles.bodyLargeGray700
-                                      .copyWith(
-                                    height: 1.31,
-                                  ),
-                                )
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
               // Overlay layer - Dropdown list
@@ -2241,6 +2394,7 @@ Future<void> loadData() async {
               formData['groomImage'] = groomImage;
               formData['selectedAudio'] = jsonEncode(selectedMusic);
               formData['musicList'] = jsonEncode(musicListJson);
+              formData['caricature'] = widget.caricature;
 
               saveData(formData);
             }
