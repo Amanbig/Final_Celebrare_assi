@@ -110,42 +110,48 @@ class _TransliterateFormField extends State<TransliterateFormField> {
   }
 
   Future<void> _getTransliterations() async {
-    if (currentSelectionStart == null ||
-        currentSelectionEnd == null ||
-        currentSelectionEnd == currentSelectionStart ||
-        widget.languageCode == "en") {
-      // Return if current selection is empty
-      return;
-    }
+  if (currentSelectionStart == null ||
+      currentSelectionEnd == null ||
+      currentSelectionEnd == currentSelectionStart ||
+      widget.languageCode == "en") {
+    // Return if current selection is empty or language is English
+    return;
+  }
 
-    final text = widget.controller.text
-        .substring(currentSelectionStart!, currentSelectionEnd);
+  final text = widget.controller.text
+      .substring(currentSelectionStart!, currentSelectionEnd!);
 
-    // Clear previous suggestions to prevent wrong selection and set loading to true
-    setState(() {
-      _removeOverlay();
-      _suggestions = [];
-      _isLoading = true;
-    });
-    // Try to call API to get transliterations
-    try {
-      final response = await http.post(
-        Uri.parse(
-          'https://inputtools.google.com/request?text=$text&itc=${widget.languageCode}-t-i0-und&num=5&cp=0&cs=1&ie=utf-8&oe=utf-8&app=demopage',
-        ),
-      );
+  // Clear previous suggestions and set loading to true
+  setState(() {
+    _removeOverlay();
+    _suggestions = [];
+    _isLoading = true;
+  });
 
-      if (response.statusCode == 200) {
-        handleSuccessfulResponse(text, response);
-      } else {
-        // If response code != 200 execute onError
-        widget.onError?.call();
-      }
-    } catch (e) {
-      // Execute onError function on exception
+  // Call API only if the selected text is non-empty
+  if (text.trim().isEmpty) {
+    _clearSuggestions();
+    return;
+  }
+
+  // Try to call API to get transliterations
+  try {
+    final response = await http.post(
+      Uri.parse(
+        'https://inputtools.google.com/request?text=$text&itc=${widget.languageCode}-t-i0-und&num=5&cp=0&cs=1&ie=utf-8&oe=utf-8&app=demopage',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      handleSuccessfulResponse(text, response);
+    } else {
       widget.onError?.call();
     }
+  } catch (e) {
+    widget.onError?.call();
   }
+}
+
 
   // Handles if API results with code 200
   void handleSuccessfulResponse(String text, http.Response response) {
@@ -172,54 +178,57 @@ class _TransliterateFormField extends State<TransliterateFormField> {
   // Function updates currentSelectedStart and currentSelectedEnd when
   // textEditController detects changes
   void _updateCurrentSelection() {
-    final text = widget.controller.text;
-    int cursorPosition = widget.controller.selection.baseOffset;
-    if (cursorPosition == -1) {
-      return;
+  final text = widget.controller.text;
+  int cursorPosition = widget.controller.selection.baseOffset;
+  if (cursorPosition == -1) {
+    return;
+  }
+
+  int start = cursorPosition;
+  while (start > 0 &&
+      text[start - 1] != ' ' &&
+      text[start - 1] != '\n' &&
+      text[start - 1] != '\r') {
+    start--;
+  }
+
+  int end = cursorPosition;
+  while (end < text.length &&
+      text[end] != ' ' &&
+      text[end] != '\n' &&
+      text[end] != '\r') {
+    end++;
+  }
+
+  // If current selection has no word or space is entered, clear suggestions
+  if (start == end) {
+    if (_suggestions.isNotEmpty && currentSelectionEnd! + 1 == end) {
+      replaceCurrentSelection(_suggestions[0], true);
     }
 
-    int start = cursorPosition;
-    while (start > 0 &&
-        text[start - 1] != ' ' &&
-        text[start - 1] != '\n' &&
-        text[start - 1] != '\r') {
-      start--;
-    }
+    // Clear suggestions and set selection to empty
+    setState(() {
+      _suggestions = [];
+      currentSelectionStart = null;
+      currentSelectionEnd = null;
+    });
+  }
 
-    int end = cursorPosition;
-    while (end < text.length &&
-        text[end] != ' ' &&
-        text[end] != '\n' &&
-        text[end] != '\r') {
-      end++;
-    }
+  // Update current selection
+  currentSelectionStart = start;
+  currentSelectionEnd = end;
 
-    // If current selection have no word
-    if (start == end) {
-      // If cursor is on whitespace after last selected word
-      // and suggestions are available, replace last word to
-      // its transliteration.
-      if (_suggestions.isNotEmpty && currentSelectionEnd! + 1 == end) {
-        replaceCurrentSelection(_suggestions[0], true);
-      }
-
-      // Clear suggestions and set selection to empty
-      setState(() {
-        _suggestions = [];
-        currentSelectionStart = null;
-        currentSelectionEnd = null;
-      });
-    }
-
-    //Update current selection
-    currentSelectionStart = start;
-    currentSelectionEnd = end;
-
-    //If selection is not empty get suggestions
-    if (start != end) {
+  // If selection is not empty, get suggestions if character is typed
+  if (start != end) {
+    String currentInput = text.substring(start, end);
+    if (currentInput.trim().isNotEmpty) {
       _getTransliterations();
+    } else {
+      _clearSuggestions(); // Clear suggestions if the input is a space
     }
   }
+}
+
 
   void _showOverlay() {
     _removeOverlay();
