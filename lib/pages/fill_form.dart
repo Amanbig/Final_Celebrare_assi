@@ -208,11 +208,7 @@ class _FillFormState extends State<FillForm> {
 
   Map<String, dynamic> data = {};
   // Default selected music
-  MusicModel selectedMusic = MusicModel(
-      name: 'Aaj Sajeya',
-      url:
-          'https://firebasestorage.googleapis.com/v0/b/python-14626.appspot.com/o/compressedSongs%2FAaj-sajeya.mp3?alt=media&token=affe9265-89db-4160-931e-b5c00625c2fe',
-      audioString: '');
+  late MusicModel selectedMusic;
 
   final _brideAndGroomKey =
       GlobalKey<FormState>(); // Key to validate bride and groom name form
@@ -230,6 +226,7 @@ class _FillFormState extends State<FillForm> {
   @override
   void initState() {
     super.initState();
+    selectedMusic = musicList[0];
     _initializeData();
   }
 
@@ -603,97 +600,108 @@ class _FillFormState extends State<FillForm> {
   /// Build Widget
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white, // Same as the AppBar background color
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.grey, // Color of the border
-                width: 1.0, // Thickness of the border
-              ),
-            ),
+
+    return Sizer(
+      builder: (context, orientation, deviceType) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(1.2), // Custom text scaling
           ),
-          child: AppBar(
-            backgroundColor:
-                Colors.transparent, // Make the AppBar background transparent
-            elevation: 0,
-            leading: Icon(Icons.arrow_back_ios_new,
-                color: Colors.black), // Remove default AppBar shadow
-            title: Center(
-              child: Image.asset(
-                ImageConstant.wowInviteImage,
-                width: 144,
-                height: 39,
-              ),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: const Text(
-                  'Need Help ?',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w400,
-                    color: Color.fromRGBO(153, 153, 153, 1),
+      child: Theme(
+        data:theme,
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white, // Same as the AppBar background color
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey, // Color of the border
+                    width: 1.0, // Thickness of the border
                   ),
                 ),
               ),
-            ],
+              child: AppBar(
+                backgroundColor:
+                    Colors.transparent, // Make the AppBar background transparent
+                elevation: 0,
+                leading: Icon(Icons.arrow_back_ios_new,
+                    color: Colors.black), // Remove default AppBar shadow
+                title: Center(
+                  child: Image.asset(
+                    ImageConstant.wowInviteImage,
+                    width: 144,
+                    height: 39,
+                  ),
+                ),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: const Text(
+                      'Need Help ?',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w400,
+                        color: Color.fromRGBO(153, 153, 153, 1),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
+          body: SafeArea(
+              child: ListView.builder(
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Padding(
+                  padding: !isExpandedList[index]
+                      ? const EdgeInsets.only(top: 24)
+                      : EdgeInsets.zero,
+                  child: buildCustomExpansionTile(
+                    isExpandedList[index] ? 'Create Event' : 'Event Created',
+                    '${brideControllers[0].text} weds ${groomControllers[0].text}',
+                    index,
+                    [buildCreateEvent()],
+                    Key(index.toString()),
+                  ),
+                );
+              } else if (index == 1) {
+                return buildCustomExpansionTile(
+                  'Bride & Groom Details',
+                  'Bride & Groom family details added',
+                  index,
+                  [buildBrideAndGroom()],
+                  Key(index.toString()),
+                );
+              } else if (index == 2) {
+                return buildCustomExpansionTile(
+                  isCompletedList[index] && !isExpandedList[index]
+                      ? '${eventList.length} Events Added'
+                      : 'Event Details',
+                  eventFormat(),
+                  index,
+                  [buildAddEvents()],
+                  Key(index.toString()),
+                );
+              } else if (index == 3) {
+                return buildCustomExpansionTile(
+                  'Songs & Caricature',
+                  '',
+                  index,
+                  [buildSongAndCaricature()],
+                  Key(index.toString()),
+                );
+              }
+            },
+          )),
+          bottomNavigationBar: _buildNavigationButtonsRow(),
         ),
       ),
-      body: SafeArea(
-          child: ListView.builder(
-        itemCount: 4,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Padding(
-              padding: !isExpandedList[index]
-                  ? const EdgeInsets.only(top: 24)
-                  : EdgeInsets.zero,
-              child: buildCustomExpansionTile(
-                isExpandedList[index] ? 'Create Event' : 'Event Created',
-                '${brideControllers[0].text} weds ${groomControllers[0].text}',
-                index,
-                [buildCreateEvent()],
-                Key(index.toString()),
-              ),
-            );
-          } else if (index == 1) {
-            return buildCustomExpansionTile(
-              'Bride & Groom Details',
-              'Bride & Groom family details added',
-              index,
-              [buildBrideAndGroom()],
-              Key(index.toString()),
-            );
-          } else if (index == 2) {
-            return buildCustomExpansionTile(
-              isCompletedList[index] && !isExpandedList[index]
-                  ? '${eventList.length} Events Added'
-                  : 'Event Details',
-              eventFormat(),
-              index,
-              [buildAddEvents()],
-              Key(index.toString()),
-            );
-          } else if (index == 3) {
-            return buildCustomExpansionTile(
-              'Songs & Caricature',
-              '',
-              index,
-              [buildSongAndCaricature()],
-              Key(index.toString()),
-            );
-          }
-        },
-      )),
-      bottomNavigationBar: _buildNavigationButtonsRow(),
     );
   }
 
@@ -1779,6 +1787,21 @@ class _FillFormState extends State<FillForm> {
       text: isEdit ? "Update Event" : "Add Event",
       onPressed: () => _handleSubmit(context, events),
       margin: EdgeInsets.symmetric(horizontal: 74.h),
+      buttonStyle: OutlinedButton.styleFrom(
+          backgroundColor: Color.fromRGBO(109, 81, 206, 1),
+          side: BorderSide(
+            color: appTheme.blueGray10003,
+            width: 1.h,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5.h),
+          ),
+          visualDensity: const VisualDensity(
+            vertical: -4,
+            horizontal: -4,
+          ),
+          padding: EdgeInsets.zero,
+        ),
       rightIcon: Container(
           margin: EdgeInsets.only(left: 8.h),
           child: Icon(
@@ -2350,6 +2373,21 @@ class _FillFormState extends State<FillForm> {
   Widget _buildNextButton(BuildContext context) {
     return CustomOutlinedButton(
       width: 116.h,
+      buttonStyle:  OutlinedButton.styleFrom(
+          backgroundColor: Color.fromRGBO(109, 81, 206, 1),
+          side: BorderSide(
+            color: appTheme.blueGray10003,
+            width: 1.h,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5.h),
+          ),
+          visualDensity: const VisualDensity(
+            vertical: -4,
+            horizontal: -4,
+          ),
+          padding: EdgeInsets.zero,
+        ),
       text: "Next",
       onPressed: () {
         if ((currentPage == 0 && _brideAndGroomKey.currentState!.validate()) ||

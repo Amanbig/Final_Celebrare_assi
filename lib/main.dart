@@ -20,8 +20,8 @@ class MyApp extends StatelessWidget {
     return Sizer(
       builder: (context, orientation, deviceType) {
         return MaterialApp(
-          theme: theme,
           initialRoute: '/',
+          debugShowCheckedModeBanner: false,
           routes:{
             '/': (context) => LanguagePage(),
           },
