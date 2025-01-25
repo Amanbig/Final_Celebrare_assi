@@ -601,106 +601,99 @@ class _FillFormState extends State<FillForm> {
   @override
   Widget build(BuildContext context) {
 
-    return Sizer(
-      builder: (context, orientation, deviceType) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(1.2), // Custom text scaling
-          ),
-      child: Theme(
-        data:theme,
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: PreferredSize(
-            preferredSize: Size.fromHeight(kToolbarHeight),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white, // Same as the AppBar background color
-                border: Border(
-                  bottom: BorderSide(
-                    color: Colors.grey, // Color of the border
-                    width: 1.0, // Thickness of the border
-                  ),
+    return Theme(
+      data:theme,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(kToolbarHeight),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white, // Same as the AppBar background color
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey, // Color of the border
+                  width: 1.0, // Thickness of the border
                 ),
-              ),
-              child: AppBar(
-                backgroundColor:
-                    Colors.transparent, // Make the AppBar background transparent
-                elevation: 0,
-                leading: Icon(Icons.arrow_back_ios_new,
-                    color: Colors.black), // Remove default AppBar shadow
-                title: Center(
-                  child: Image.asset(
-                    ImageConstant.wowInviteImage,
-                    width: 144,
-                    height: 39,
-                  ),
-                ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: const Text(
-                      'Need Help ?',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w400,
-                        color: Color.fromRGBO(153, 153, 153, 1),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
-          ),
-          body: SafeArea(
-              child: ListView.builder(
-            itemCount: 4,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Padding(
-                  padding: !isExpandedList[index]
-                      ? const EdgeInsets.only(top: 24)
-                      : EdgeInsets.zero,
-                  child: buildCustomExpansionTile(
-                    isExpandedList[index] ? 'Create Event' : 'Event Created',
-                    '${brideControllers[0].text} weds ${groomControllers[0].text}',
-                    index,
-                    [buildCreateEvent()],
-                    Key(index.toString()),
+            child: AppBar(
+              backgroundColor:
+                  Colors.transparent, // Make the AppBar background transparent
+              elevation: 0,
+              leading: Icon(Icons.arrow_back_ios_new,
+                  color: Colors.black), // Remove default AppBar shadow
+              title: Center(
+                child: Image.asset(
+                  ImageConstant.wowInviteImage,
+                  width: 144,
+                  height: 39,
+                ),
+              ),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: const Text(
+                    'Need Help ?',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w400,
+                      color: Color.fromRGBO(153, 153, 153, 1),
+                    ),
                   ),
-                );
-              } else if (index == 1) {
-                return buildCustomExpansionTile(
-                  'Bride & Groom Details',
-                  'Bride & Groom family details added',
-                  index,
-                  [buildBrideAndGroom()],
-                  Key(index.toString()),
-                );
-              } else if (index == 2) {
-                return buildCustomExpansionTile(
-                  isCompletedList[index] && !isExpandedList[index]
-                      ? '${eventList.length} Events Added'
-                      : 'Event Details',
-                  eventFormat(),
-                  index,
-                  [buildAddEvents()],
-                  Key(index.toString()),
-                );
-              } else if (index == 3) {
-                return buildCustomExpansionTile(
-                  'Songs & Caricature',
-                  '',
-                  index,
-                  [buildSongAndCaricature()],
-                  Key(index.toString()),
-                );
-              }
-            },
-          )),
-          bottomNavigationBar: _buildNavigationButtonsRow(),
+                ),
+              ],
+            ),
+          ),
         ),
+        body: SafeArea(
+            child: ListView.builder(
+          itemCount: 4,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return Padding(
+                padding: !isExpandedList[index]
+                    ? const EdgeInsets.only(top: 24)
+                    : EdgeInsets.zero,
+                child: buildCustomExpansionTile(
+                  isExpandedList[index] ? 'Create Event' : 'Event Created',
+                  '${brideControllers[0].text} weds ${groomControllers[0].text}',
+                  index,
+                  [buildCreateEvent()],
+                  Key(index.toString()),
+                ),
+              );
+            } else if (index == 1) {
+              return buildCustomExpansionTile(
+                'Bride & Groom Details',
+                'Bride & Groom family details added',
+                index,
+                [buildBrideAndGroom()],
+                Key(index.toString()),
+              );
+            } else if (index == 2) {
+              return buildCustomExpansionTile(
+                isCompletedList[index] && !isExpandedList[index]
+                    ? '${eventList.length} Events Added'
+                    : 'Event Details',
+                eventFormat(),
+                index,
+                [buildAddEvents()],
+                Key(index.toString()),
+              );
+            } else if (index == 3) {
+              return buildCustomExpansionTile(
+                'Songs & Caricature',
+                '',
+                index,
+                [buildSongAndCaricature()],
+                Key(index.toString()),
+              );
+            }
+          },
+        )),
+        bottomNavigationBar: _buildNavigationButtonsRow(),
       ),
     );
   }
