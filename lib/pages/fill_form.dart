@@ -877,6 +877,21 @@ class _FillFormState extends State<FillForm> {
           CustomOutlinedButton(
             width: 158.h,
             text: "Got it",
+            buttonStyle: OutlinedButton.styleFrom(
+              backgroundColor: Color.fromRGBO(109, 81, 206, 1),
+              side: BorderSide(
+                color: appTheme.blueGray10003,
+                width: 1.h,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.h),
+              ),
+              visualDensity: const VisualDensity(
+                vertical: -4,
+                horizontal: -4,
+              ),
+              padding: EdgeInsets.zero,
+            ),
             onPressed: () {
               setState(() {
                 isInst = false;
